@@ -60,7 +60,7 @@ void Simulazione(){
     Intersezione p_int;
     Kinem_File pl; 
     mult=0; 
-    pl.OpenFile();
+    
 
     for(Int_t i=0;i<nevent;i++){
 
