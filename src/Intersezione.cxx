@@ -95,12 +95,12 @@ void Intersezione::SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t
    }
 
 void Intersezione::Rumore(Double_t LUNG_BEAM){
-  Double_t u = gRandom->Rndm();
+	Double_t u = gRandom->Rndm();
 
-  PHI = 2 * TMath::Pi() *gRandom->Rndm();
+	PHI = 2 * TMath::Pi() *gRandom->Rndm();
 
-  if(u>0.5) z = gRandom->Rndm()*LUNG_BEAM*0.5;
-    else    z = -gRandom->Rndm()*LUNG_BEAM*0.5;
+	if(u>0.5) z = gRandom->Rndm()*LUNG_BEAM*0.5;
+		else    z = -gRandom->Rndm()*LUNG_BEAM*0.5;
 
 }
 

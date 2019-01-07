@@ -1,42 +1,36 @@
+#include "Punto.h"
 #include <Riostream.h>
 #include "TObject.h"
-#include "TMath.h"
-#include "Punto.h"
-
+#include "TRandom3.h"
 
 ClassImp(Punto)
 
-//________________________________________________________________________
-Punto::Punto():TObject(),
- fX(0.),
- fY(0.),
- fZ(0.){
-   // default constructor
+Punto::Punto(): TObject(),
+  fX(0.),
+  fY(0.),
+  fZ(0.)
+{
+}
+
+Punto::Punto(Double_t x, Double_t y, Double_t z): TObject(),
+  fX(x),
+  fY(y),
+  fZ(z)
+{
 }
 
 
-//___________________________________________________________________________
-Punto::Punto(Double_t X, Double_t Y, Double_t Z):TObject(),
- fX(X),
- fY(Y),
- fZ(Z){
-	//standard constructor 
-}	     
+void Punto::Point(Float_t RMS_XY,Float_t RMS_Z, Bool_t EstraiVert){
 
-//___________________________________________________________________________
-Punto::~Punto()	 {
-  // destructor
-}
+   Double_t ZFissa[] = {-15.,-12.5,-10.,-7.5,-5.,-2.5,0.,2.5,5.,7.5,10.,12.5,15.};
+   Int_t index_fisso = (Int_t)gRandom->Rndm()*13;
+   fX = gRandom->Gaus(0.,RMS_XY);
+   fY = gRandom->Gaus(0.,RMS_XY);
+   
+   if(EstraiVert==1) fZ = gRandom->Gaus(0.,RMS_Z);
+   else fZ = ZFissa[index_fisso];
 
-Double_t Punto::GetR() const {
-	return TMath::Sqrt(fX*fX + fY*fY);
-}
+ }
 
-Double_t Punto::GetPhi() const {
-	return TMath::ATan2(fY, fX);
-}
 
-Double_t Punto::GetTh() const{
-	return TMath::ATan2(fZ, GetR());
-}
-
+ Punto::~Punto(){}
