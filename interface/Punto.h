@@ -12,7 +12,7 @@ class Punto: public TObject
 
 		virtual ~Punto();
 
-		void Point(Float_t RMS_XY,Float_t RMS_Z,Bool_t EstraiVert);
+		void Generate(Float_t RMS_XY,Float_t RMS_Z,Bool_t EstraiVert);
 
 		Double_t GetX() const {return fX;}
 		Double_t GetY() const {return fY;}

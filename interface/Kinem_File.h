@@ -1,7 +1,8 @@
 #ifndef KINEM_FILE_H
 #define KINEM_FILE_H
 
-#include <TObject.h>
+#include "TObject.h"
+#include "TFile.h"
 #include "TCanvas.h"
 
 class Kinem_File:public TObject
@@ -11,7 +12,6 @@ class Kinem_File:public TObject
 
   virtual ~Kinem_File();
 
-  void OpenFile();
   void Pseudorapidita(Int_t Molt);
   void Molteplicita();
 
@@ -19,13 +19,10 @@ class Kinem_File:public TObject
   Double_t GetM()const {return mult;}
 
  private:
-
+	
+	TFile* sourceFile;
   Double_t *Ps_rapidity;
   Int_t mult;
-  Int_t n_bins,n_binsm;
-  Double_t xlow,xhig,xlowm,xhigm;
-  TAxis *xa;
-  Int_t b1,b2, b1m,b2m;
   TH1F *dishmul, *disteta;
 
 

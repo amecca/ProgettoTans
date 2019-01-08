@@ -20,17 +20,18 @@ Punto::Punto(Double_t x, Double_t y, Double_t z): TObject(),
 }
 
 
-void Punto::Point(Float_t RMS_XY,Float_t RMS_Z, Bool_t EstraiVert){
+void Punto::Generate(Float_t RMS_XY,Float_t RMS_Z, Bool_t EstraiVert){
 
-   Double_t ZFissa[] = {-15.,-12.5,-10.,-7.5,-5.,-2.5,0.,2.5,5.,7.5,10.,12.5,15.};
-   Int_t index_fisso = (Int_t)gRandom->Rndm()*13;
    fX = gRandom->Gaus(0.,RMS_XY);
    fY = gRandom->Gaus(0.,RMS_XY);
    
-   if(EstraiVert==1) fZ = gRandom->Gaus(0.,RMS_Z);
-   else fZ = ZFissa[index_fisso];
-
- }
+   if(EstraiVert) fZ = gRandom->Gaus(0.,RMS_Z);
+   else{
+		Double_t ZFissa[] = {-15.,-12.5,-10.,-7.5,-5.,-2.5,0.,2.5,5.,7.5,10.,12.5,15.};
+		Int_t index_fisso = (Int_t)(gRandom->Rndm()*13);
+    fZ = ZFissa[index_fisso];
+  }
+}
 
 
  Punto::~Punto(){}
