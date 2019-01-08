@@ -13,7 +13,6 @@ Intersezione::Intersezione(): TObject(),
  PHI(0.),
  THETA(0.),
  HitTrovato(false)
-
 {
 }
 

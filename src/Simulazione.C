@@ -92,7 +92,7 @@ void Simulazione(){
         theta0_scat= gRandom->Gaus(0,beam_rms);
 
 		// Intersezione
-        p_int.SetPoint(lung_beam,vtx.x0,vtx.y0,vtx.z0,R,phi0,theta0,theta0_scat,phi0_scat, bool_scat); //non considero lo smearing
+        p_int.SetPoint(lung_beam,vtx.x0,vtx.y0,vtx.z0,R,phi0,theta0,theta0_scat,phi0_scat); //non considero lo smearing
 
         x0_scat=p_int.GetX();
         y0_scat=p_int.GetY();
@@ -107,7 +107,7 @@ void Simulazione(){
 
         theta1=p_int.GetTHETA();
 
-        p_int.SetPoint(lung_beam,x0_scat,y0_scat,z0_scat,R,phi0_scat,theta1,theta1_scat,2*TMath::Pi()*(gRandom->Rndm()), bool_scat);
+        p_int.SetPoint(lung_beam,x0_scat,y0_scat,z0_scat,R,phi0_scat,theta1,theta1_scat,2*TMath::Pi()*(gRandom->Rndm()));
         x1_scat=p_int.GetX();
         y1_scat=p_int.GetY();
         z1_scat=p_int.GetZ();
@@ -132,7 +132,7 @@ void Simulazione(){
             smear_phi2= smear_rphi/Raggio[2];
             theta2=p_int.GetTHETA();
 
-            p_int.SetPoint(lung_beam,x1_scat,y1_scat,z1_scat,R,phi1_scat,theta2,gRandom->Gaus(0,l1_rms),2*TMath::Pi()*(gRandom->Rndm()), bool_scat);
+            p_int.SetPoint(lung_beam,x1_scat,y1_scat,z1_scat,R,phi1_scat,theta2,gRandom->Gaus(0,l1_rms),2*TMath::Pi()*(gRandom->Rndm()));
             z2_scat=p_int.GetZ();
             phi2_scat=p_int.GetPHI();
 
