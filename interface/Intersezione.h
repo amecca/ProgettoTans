@@ -2,7 +2,7 @@
 #define INTERSEZIONE_H
 
 #include <TObject.h>
-
+#include "Direzione.h"
 class Intersezione: public TObject
 {
 
@@ -13,7 +13,8 @@ Bool_t HitTrovato;
 
 virtual ~Intersezione();
 
- void SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Double_t PHI0,Double_t THETA0,Double_t thp,Double_t php);
+ //void SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Direzione direz,Double_t thp,Double_t php);
+Punto SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Direzione direz,Double_t thp,Double_t php);
  void Multiple_scattering(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Double_t PHI0,Double_t THETA0,Double_t thp,Double_t php);
  void Rumore(Double_t LUNG_BEAM);
 

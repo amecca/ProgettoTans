@@ -6,6 +6,7 @@
 #include "TBranch.h"
 #include "TMath.h"
 #include "TRandom3.h"
+#include "Direzione.h"
 #include "TClonesArray.h"
 #include "TFile.h"
 #include "Intersezione.h"
@@ -15,7 +16,7 @@ void Simulazione(){
 
   typedef struct{
     Double_t x0,y0,z0;
-    Int_t m;
+    UInt_t m;
   }VERTICE;
 
   static VERTICE vtx;
@@ -57,7 +58,7 @@ void Simulazione(){
     gRandom->SetSeed(clock());
 
     Punto pt;
-    Intersezione p_int;
+	Intersezione p_int;
     Kinem_File kinem;
     mult=0;
     
@@ -70,9 +71,7 @@ void Simulazione(){
       vtx.y0=pt.GetY(); 
       vtx.z0=pt.GetZ();
 
-      kinem.Molteplicita(); // Kinem_File
-      mult = kinem.GetM();  
-      kinem.Pseudorapidita(mult);
+      mult = kinem.Molteplicita(); 
       vtx.m = mult;
 
       Label=1; //etichetta assegnata alla particella
@@ -82,17 +81,16 @@ void Simulazione(){
       //loop sulla MOLTEPLICITA
       for(Int_t j=0; j<mult; j++){
 
-        phi0=(gRandom->Rndm())*2*TMath::Pi(); //angoli alla collisione
-        theta0=kinem.GetTeta(j);
+ 		Direzione direz(&kinem); // direz aggionata della prticella
 
         //Beam pipe
         R=Raggio[0]; // valore assegnato in Read_dat_simulation
 
-        phi0_scat= 2*TMath::Pi()*(gRandom->Rndm());
-        theta0_scat= gRandom->Gaus(0,beam_rms);
+/*        phi0_scat= 2*TMath::Pi()*(gRandom->Rndm());
+        theta0_scat= gRandom->Gaus(0,beam_rms);*/
 
 		// Intersezione
-        p_int.SetPoint(lung_beam,vtx.x0,vtx.y0,vtx.z0,R,phi0,theta0,theta0_scat,phi0_scat); //non considero lo smearing
+        p_int.SetPoint(lung_beam,vtx.x0,vtx.y0,vtx.z0,R,direz/*,theta0_scat,phi0_scat*/); //non considero lo smearing
 
         x0_scat=p_int.GetX();
         y0_scat=p_int.GetY();
@@ -100,7 +98,7 @@ void Simulazione(){
         phi0_scat=p_int.GetPHI();
 
         //1° Rivelatore
-        R=Raggio[1]-Raggio[0];
+        R=Raggio[1];
       	//  R=Raggio[1];
         smear_phi1= smear_rphi/Raggio[1]; //smearing su phi normalizzato al raggio
         theta1_scat=gRandom->Gaus(0,l1_rms); 
@@ -126,7 +124,7 @@ void Simulazione(){
            Successi1++; // crea un l1_hit per ogni evento e ci assegna z phi e label, successi1 sono nel beam pipe
 
             //2° Rivelatore
-      	   R=Raggio[2]-Raggio[1];
+      	   R=Raggio[2];
           // R=Raggio[2];
 
             smear_phi2= smear_rphi/Raggio[2];

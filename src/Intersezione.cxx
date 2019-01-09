@@ -17,10 +17,12 @@ Intersezione::Intersezione(): TObject(),
 }
 
 //generazione della direzione associata ad ogni particella
-void Intersezione::SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Double_t PHI0,Double_t THETA0,Double_t thp,Double_t php){
+void Intersezione::SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R,Direzione direz,Double_t thp,Double_t php){
 
   HitTrovato = false;
 
+  Double_t PHI0 = direz.GetPHI();
+  Double_t THETA0 = direz.GetTHETA();
   Double_t a,b,c;
   Double_t alpha,beta,gamma;
   Double_t x1,x,x2,x3;
@@ -35,8 +37,6 @@ void Intersezione::SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t
   c2 = TMath::Sin(THETA0)*TMath::Sin(PHI0);
   c3 = TMath::Cos(THETA0);
 
-   // update angolo theta dopo multiple scattering
-    THETA=TMath::ACos(c3);
 	// scompongo delta in tre contributi a,b,c
     a = (X0*c1+Y0*c2);
     b = (c1*c1+c2*c2);

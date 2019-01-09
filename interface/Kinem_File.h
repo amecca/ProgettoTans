@@ -12,18 +12,18 @@ class Kinem_File:public TObject
 
   virtual ~Kinem_File();
 
-  void Pseudorapidita(Int_t Molt);
-  void Molteplicita();
-
+  UInt_t Molteplicita();
+  Double_t Pseudorapidita() const;
+  Double_t GenTheta() const;
+  Double_t GenPhi() const;
   Double_t GetTeta(Int_t k) const;
-  Double_t GetM()const {return mult;}
+  
 
  private:
 	
 	TFile* sourceFile;
-  Double_t *Ps_rapidity;
-  Int_t mult;
-  TH1F *dishmul, *disteta;
+    TH1F *dishmul;
+	TH1F *disteta;
 
 
   ClassDef(Kinem_File,1);
