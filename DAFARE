@@ -1,0 +1,6 @@
+oggetto Direzione 
+data memeber th ph
+costruttore vuoto genera th e ph 
+costruttore chiama puntatore a kinem_file
+SetPoint calcola solo il punto d'impatto
+Multiple scattering calcola solo la nuova direzione a partire da quella vecchia 
