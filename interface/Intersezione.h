@@ -1,8 +1,10 @@
 #ifndef INTERSEZIONE_H
 #define INTERSEZIONE_H
 
-#include <TObject.h>
+#include "TObject.h"
 #include "Direzione.h"
+#include "Punto.h"
+#include "Hit.h"
 class Intersezione: public TObject
 {
 
@@ -14,15 +16,10 @@ Bool_t HitTrovato;
 virtual ~Intersezione();
 
  //void SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Direzione direz,Double_t thp,Double_t php);
-Punto SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Direzione direz,Double_t thp,Double_t php);
- void Multiple_scattering(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Double_t PHI0,Double_t THETA0,Double_t thp,Double_t php);
- void Rumore(Double_t LUNG_BEAM);
+Punto SetPoint(Double_t LUNG_BEAM,Punto pStart, Double_t R, Direzione direz);
+Direzione Multiple_Scattering(const Direzione& direzStart, const Double_t& rms_theta);
+Hit Rumore(Double_t LUNG_BEAM, Int_t label = -1);
 
- Double_t GetX() const{return x;}
- Double_t GetY() const{return y;}
- Double_t GetZ() const{return z;}
- Double_t GetPHI() const {return PHI;}
- Double_t GetTHETA() const {return THETA;}
 
  private:
 

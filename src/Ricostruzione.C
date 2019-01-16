@@ -17,21 +17,29 @@
 
 using std::cout;
 
+const Double_t tolleranza = 3.5; //cm
+
 //Move to a separate file
 typedef struct{
 	Double_t x0,y0,z0;
 	Int_t m;
 }VERTICE;
 
-Double_t mediaIntornoA(const std::vector<Double_t>& zRec, const Double_t& zModa, const Double_t& tolleranza);
+Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
 
 void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName = "VT"){
 	//Histograms and Canvas
 	//TCanvas* cZetaV = new TCanvas("cZetaV","cZetaV",10,10,1200,1000);
 	//TH1F* hZetaV = new TH1F("hZetaV","hZetaV",100,-50,50);
 	
-	TCanvas* ciccio = new TCanvas("ciccio","ciccio",10,10,1200,1000);
-	TH1F* hciccio = new TH1F("hciccio","hciccio",20,-20,40);
+//	TCanvas* ciccio = new TCanvas("ciccio","ciccio",10,10,1200,1000);
+	
+	TCanvas* ctagli = new TCanvas("ctagli","ctagli",10,10,1200,1000);
+	TH1I* tagli = new TH1I("tagli","Tagli",3,0,3);
+	tagli->SetMinimum(0);
+	
+	TCanvas* deltaZ = new TCanvas("deltaZ","#Delta z",10,10,1200,1000);
+	TH1F* hdeltaZ = new TH1F("hdeltaZ","Z_{rec} - Z_{true}",200,-0.5,0.5);
 	
 	//TCanvas* cZetaL1 = new TCanvas("cZetaL1","cZetaL1",10,10,1200,1000);
 	//TH1F* hZetaL1 = new TH1F("hZetaL1","hZetaL1",100,-50,50);
@@ -76,12 +84,15 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	//Main loop
 	long nEntries = tree->GetEntries();
 	cout<<"Processing "<<nEntries<<" entries: ";
-	for(long k = 0; k < 100/*nEntries*/; k++){
+	UInt_t nonRicostruiti = 0;
+	const bool tutti = false;
+	for(long k = 0; k < (tutti ? nEntries : 20000); k++){
+		tagli->Fill(0);
 		//if((100*k)%nEntries == 0) cout<<"\r\t\t\t\t"<< (100*k)/nEntries << " %";
-		//if(tree->GetEntry(k) <= 0) continue;
-		b_vtx->GetEntry(k);
-		b_L1Hits->GetEntry(k);
-		b_L2Hits->GetEntry(k);
+		if(tree->GetEntry(k) <= 0) continue;
+		//b_vtx->GetEntry(k);
+		//b_L1Hits->GetEntry(k);
+		//b_L2Hits->GetEntry(k);
 		cout<<"\r\t\t\t\t"<<k+1;
 
 		
@@ -90,7 +101,8 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 		TObject* thisObj2;
 		Hit* thisHit1; 
 		Hit* thisHit2;
-		std::vector<Double_t> zRec;
+//		std::vector<Double_t> zRicostruiti;
+		std::vector<Double_t>zRicostruiti[5];
 		
 		for(int i = 0; i < L1Hits->GetEntries(); i++){
 			thisObj1 = (*L1Hits)[i];
@@ -100,22 +112,41 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 				thisObj2 = (*L2Hits)[i];
 				thisHit2 = (Hit*)thisObj2;
 				
-				if(fabs(thisHit1->GetPHI() - thisHit2->GetPHI())>0.08) continue;
+				for(Int_t k = 0; k<1; k++){
+					if(fabs(thisHit1->GetPHI() - thisHit2->GetPHI())>0.05*(k+1)) continue;
+					new(dummyTrackelet) Trackelet(thisHit1, thisHit2); //Avoid alloc-dealloc overhead by reusing the same memory
+					zRicostruiti[k].push_back(dummyTrackelet->findZVertex());
+				}
+				/*
+				if(fabs(thisHit1->GetPHI() - thisHit2->GetPHI())>0.5) continue;
 				new(dummyTrackelet) Trackelet(thisHit1, thisHit2); //Avoid alloc-dealloc overhead by reusing the same memory
-				zRec.push_back(dummyTrackelet->findZVertex());
+				zRicostruiti.push_back(dummyTrackelet->findZVertex());*/
 			}
 			//hZetaL1->Fill(thisHit1->GetZ());
 		}
+		for(Int_t k=0; k<1; k++){
+		if(zRicostruiti[k].size() == 0)
+			continue;
+		}
+		tagli->Fill(1);
 		
-		new(hciccio) TH1F("hciccio","hciccio",20,-20,40); // Dobbiamo trovare un modo efficiente di reinizializzare il grafico. Per il momento evitiamo solo eccessivi alloc-dealloc 
-		for(size_t k = 0; k < zRec.size(); k++)
-			hciccio->Fill(zRec.at(k));
-			
-		Double_t zModa = hciccio->GetMaximum();
-		
-		const Double_t tolleranza = 1; //cm
-		Double_t zRecoMean = mediaIntornoA(zRec, zModa, tolleranza);
-		
+		TH1I hciccio("hciccio","hciccio",40,-20,20);
+ 		for(Int_t j=0;j<1;j++){
+			for(size_t k = 0; k < zRicostruiti[j].size(); k++)
+				hciccio.Fill(zRicostruiti[j].at(k));
+			}	
+		//GetMaximumBin() -> trova il numero del bin (asse x) corrispondente al valore massimo (sulle y)
+		//GetBinLowEdge() -> trova il valore dell'estremo inf del bin (asse y)
+		//GetBinWidth() -> larghezza del bin: vogliamo ottenere il centro della cella
+		Int_t binMaximum = hciccio.GetMaximumBin();
+		Double_t zModa = hciccio.GetBinLowEdge(binMaximum) + hciccio.GetBinWidth(binMaximum)/2.;
+		for(Int_t j=0;j<1;j++)	Double_t zRicostruitioMean = mediaIntornoA(zRicostruiti[j], zModa, tolleranza);
+		if(zRicostruitioMean <-999.)
+			nonRicostruiti++;
+		else{
+			hdeltaZ->Fill(zRicostruitioMean - vtx.z0);
+			tagli->Fill(2);
+		}
 		
 		delete dummyTrackelet;
 		//delete thisObj1;
@@ -126,13 +157,16 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 		L1Hits->Clear("C");
 		L1Hits->Clear("C");
 	}
-	cout<<'\n';
+	cout<<"\nEventi non ricostruiti: "<<nonRicostruiti<<'\n';
 	//Draw
 	//cZetaV->cd();
 	//hZetaV->Draw();
 	
-	ciccio->cd();
-	hciccio->Draw();
+	deltaZ->cd();
+	hdeltaZ->Draw();
+	
+	ctagli->cd();
+	tagli->Draw();
 	
 	//cZetaL1->cd();
 	//hZetaL1->Draw();
@@ -143,15 +177,18 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	return;
 }
 
-Double_t mediaIntornoA(const std::vector<Double_t>& zRec, const Double_t& zModa, const Double_t& tolleranza){
+Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza){
 	Double_t temp = 0.;
 	UInt_t zMediati = 0;
-	for(size_t k = 0; k < zRec.size(); k++){
-		if(fabs(zRec.at(k) - zModa) > tolleranza) continue;
-		temp += zRec.at(k);
-		zMediati++;
+	for(Int_j=0; j<1;j++){
+	for(size_t k = 0; k < zRicostruiti[j].size(); k++){
+		if(fabs(zRicostruiti[j].at(k) - zModa) < tolleranza){
+			temp += zRicostruiti[j].at(k);
+			zMediati++;
+		}
 	}
 	if(zMediati > 0)
 		return temp/zMediati;
-	else return -100.;
+	else return -1000.;
+	}
 }

@@ -16,7 +16,7 @@ class Kinem_File:public TObject
   Double_t Pseudorapidita() const;
   Double_t GenTheta() const;
   Double_t GenPhi() const;
-  Double_t GetTeta(Int_t k) const;
+  Double_t GetTeta(const Double_t& eta) const;
   
 
  private:

@@ -2,6 +2,7 @@
 #include <Riostream.h>
 #include "TObject.h"
 #include "TRandom3.h"
+#include "TMath.h"
 
 ClassImp(Punto)
 
@@ -33,5 +34,8 @@ void Punto::Generate(Float_t RMS_XY,Float_t RMS_Z, Bool_t EstraiVert){
   }
 }
 
+Double_t Punto::GetPhi() const{
+	return TMath::ATan2(fY,fX);
+}
 
  Punto::~Punto(){}

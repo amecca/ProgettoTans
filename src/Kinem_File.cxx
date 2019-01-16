@@ -24,15 +24,15 @@ Double_t Kinem_File::Pseudorapidita() const{
 }
 
 Double_t Kinem_File::GenTheta() const{
-	return 2*TMath::ATan(TMath::Exp(-(disteta->GetRandom()));
+	return 2*TMath::ATan(TMath::Exp(-(disteta->GetRandom())));
 }
 
 Double_t Kinem_File::GenPhi() const{
   return 2*TMath::Pi()*(gRandom->Rndm());
 }
 //___________________________________________________________
-Double_t Kinem_File::GetTeta(Int_t p) const{
-  return 2*TMath::ATan(TMath::Exp(-(Ps_rapidity[p])));
+Double_t Kinem_File::GetTeta(const Double_t& eta) const{
+  return 2*TMath::ATan(TMath::Exp(-eta));
 }
 //_________________________________________________________
 UInt_t Kinem_File::Molteplicita(){
@@ -41,7 +41,8 @@ UInt_t Kinem_File::Molteplicita(){
 }
 
 Kinem_File::~Kinem_File(){
-   delete [] Ps_rapidity; // elete[] expressions that use global array deallocation functions
+	delete disteta;
+	delete dishmul;
    sourceFile->Close();
    delete sourceFile;
 }

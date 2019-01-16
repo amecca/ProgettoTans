@@ -25,17 +25,17 @@ void Simulazione(){
 
   Read_dat_simulation("Data/Dati_Simulazione.dat");// legge i dati e li assegna alle variabili
 
-  Double_t z1_smear,phi1_smear,z2_smear,phi2_smear; // smearing 
+  Double_t z1_smeared,phi1_smeared,z2_smeared,phi2_smeared; // smearing 
   Double_t x0_scat,y0_scat,z0_scat,x1_scat,y1_scat,z1_scat,z2_scat; // scattering coord.
   Double_t phi0_scat,phi1_scat,phi2_scat,theta0_scat,theta1_scat; // scattering angle
   Double_t smear_phi1, smear_phi2; // ??? LINE 28 HAS THE SAME SMEAR
-  Double_t phi0,theta0,theta1,theta2,R; //coord
+  Double_t phi0,R; //coord
   Int_t mult, Label, Successi1, Successi2; // 
 
   Bool_t EstraiVert; // bool per distribuzione in z gaussiana o assegnata
 
 
-  for(Int_t count_z=0; count_z<=1; count_z++){ // Estrai=1 fz->gauss, Estrai=0 fz->scelta 
+  for(Int_t count_z=0; count_z<=0/*1*/; count_z++){ // Estrai=1 fz->gauss, Estrai=0 fz->scelta 
     if(count_z==1) EstraiVert = false;
     else EstraiVert = true;
 
@@ -67,7 +67,7 @@ void Simulazione(){
 
       pt.Generate(rms_xy,rms_z,EstraiVert); //genera il vertice con la distribuzione assegnata 
 
-      vtx.x0=pt.GetX(); //coordinate vertice, 
+      vtx.x0=pt.GetX(); //coordinate vertice la struct VERTICE serve per scrivere sul tree 
       vtx.y0=pt.GetY(); 
       vtx.z0=pt.GetZ();
 
@@ -82,103 +82,86 @@ void Simulazione(){
       for(Int_t j=0; j<mult; j++){
 
  		Direzione direz(&kinem); // direz aggionata della prticella
-
+		
         //Beam pipe
         R=Raggio[0]; // valore assegnato in Read_dat_simulation
-
-/*        phi0_scat= 2*TMath::Pi()*(gRandom->Rndm());
-        theta0_scat= gRandom->Gaus(0,beam_rms);*/
-
-		// Intersezione
-        p_int.SetPoint(lung_beam,vtx.x0,vtx.y0,vtx.z0,R,direz/*,theta0_scat,phi0_scat*/); //non considero lo smearing
-
-        x0_scat=p_int.GetX();
-        y0_scat=p_int.GetY();
-        z0_scat=p_int.GetZ();
-        phi0_scat=p_int.GetPHI();
-
+        Punto pHitBeam = p_int.SetPoint(lung_beam,pt,R,direz); //non considero lo smearing
+		if (bool_scat==1) 
+			direz = p_int.Multiple_Scattering(direz,beam_rms); //Estrae i random all'interno
+		
         //1° Rivelatore
         R=Raggio[1];
-      	//  R=Raggio[1];
         smear_phi1= smear_rphi/Raggio[1]; //smearing su phi normalizzato al raggio
-        theta1_scat=gRandom->Gaus(0,l1_rms); 
+       
+		Punto pHitL1 = p_int.SetPoint(lung_beam,pHitBeam,R,direz);
+  		if (bool_scat==1) direz = p_int.Multiple_Scattering(direz,l1_rms);
+       
+        z1_smeared = gRandom->Gaus(pHitL1.GetZ(), smear_z); 
+        phi1_smeared = gRandom->Gaus(pHitL1.GetPhi(), smear_phi1); // smearing 120 e 30 micron
 
-        theta1=p_int.GetTHETA();
-
-        p_int.SetPoint(lung_beam,x0_scat,y0_scat,z0_scat,R,phi0_scat,theta1,theta1_scat,2*TMath::Pi()*(gRandom->Rndm()));
-        x1_scat=p_int.GetX();
-        y1_scat=p_int.GetY();
-        z1_scat=p_int.GetZ();
-        phi1_scat=p_int.GetPHI();
-
-        z1_smear= gRandom->Gaus(z1_scat, smear_z); 
-        phi1_smear = gRandom->Gaus(phi1_scat, smear_phi1); // smearing 120 e 30 micron
-
-        if (phi1_smear<0) phi1_smear = phi1_smear+ 2*TMath::Pi();
+        if (phi1_smeared<0) phi1_smeared = phi1_smeared+ 2*TMath::Pi();
            else{
-            if (phi1_smear>2*TMath::Pi()) phi1_smear = phi1_smear - 2*TMath::Pi();
+            if (phi1_smeared>2*TMath::Pi()) phi1_smeared = phi1_smeared - 2*TMath::Pi();
           } // lo smearing gauss è compreso tra 0 e 2Pi
 
-        if(z1_smear>=-lung_beam/2&&z1_smear<=lung_beam/2){
-           new(l1_hit[Successi1])Hit(z1_smear, phi1_smear, Label);
+        if(z1_smeared>=-lung_beam/2&&z1_smeared<=lung_beam/2){
+           new(l1_hit[Successi1])Hit(z1_smeared, phi1_smeared, Label);
            Successi1++; // crea un l1_hit per ogni evento e ci assegna z phi e label, successi1 sono nel beam pipe
 
-            //2° Rivelatore
+          //2° Rivelatore
       	   R=Raggio[2];
           // R=Raggio[2];
 
             smear_phi2= smear_rphi/Raggio[2];
-            theta2=p_int.GetTHETA();
+           
 
-            p_int.SetPoint(lung_beam,x1_scat,y1_scat,z1_scat,R,phi1_scat,theta2,gRandom->Gaus(0,l1_rms),2*TMath::Pi()*(gRandom->Rndm()));
-            z2_scat=p_int.GetZ();
-            phi2_scat=p_int.GetPHI();
+            Punto pHitL2 = p_int.SetPoint(lung_beam,pHitL1,R,direz);
 
-            z2_smear = gRandom->Gaus(z2_scat, smear_z);
-            phi2_smear = gRandom->Gaus(phi2_scat, smear_phi2);
+            z2_smeared = gRandom->Gaus(pHitL2.GetZ(), smear_z);
+            phi2_smeared = gRandom->Gaus(pHitL2.GetPhi(), smear_phi2);
 
-            if (phi2_smear<0) phi2_smear = phi2_smear+ 2*TMath::Pi();
+            if (phi2_smeared<0) phi2_smeared = phi2_smeared+ 2*TMath::Pi();
                else{
-                if (phi2_smear>2*TMath::Pi()) phi2_smear = phi2_smear - 2*TMath::Pi();
+                if (phi2_smeared>2*TMath::Pi()) phi2_smeared = phi2_smeared - 2*TMath::Pi();
               }
 
 
-            if(z2_smear>=-lung_beam/2&&z2_smear<=lung_beam/2){
-               new(l2_hit[Successi2])Hit(z2_smear, phi2_smear, Label); // l1 e l2 condividono il label
+            if(z2_smeared>=-lung_beam/2&&z2_smeared<=lung_beam/2){
+               new(l2_hit[Successi2])Hit(z2_smeared, phi2_smeared, Label); // l1 e l2 condividono il label
                Successi2++;
               }
             }
             Label++; // alla fine del loop sulla molteplicità cambia il Label: particelle provenienti da molt diverse avranno molt diverse
         }
-
+			
         // RUMORE
         Label = -1;
-
-  		// 1° Rivelatore
+       	// 1° Rivelatore
+  		
         for (Int_t j=Successi1; j<Successi1+count_noise; j++){//loop sul rumore
-           p_int.Rumore(lung_beam);
-           new(l1_hit[j])Hit(p_int.GetZ(), p_int.GetPHI(), Label);
+        	Hit temp = p_int.Rumore(lung_beam,Label);
+           new(l1_hit[j])Hit(temp.GetZ(),temp.GetPHI(),Label);
          }
 
          //2° Rivelatore
          for (Int_t j=Successi2; j<Successi2+count_noise; j++){//loop sul rumore
-           p_int.Rumore(lung_beam);
-           new(l2_hit[j])Hit(p_int.GetZ(), p_int.GetPHI(), Label);
+           Hit temp = p_int.Rumore(lung_beam,Label);
+           new(l2_hit[j])Hit(temp.GetZ(),temp.GetPHI(),Label);
          }
 
 
         vertTree->Fill();
       	l1hit->Clear(); // controllare TClonesArrey
       	l2hit->Clear();
-        if(i%((nevent)/100)==0&&count_z==0)cout<<"filling simulation tree: "<<i*100/(nevent)+1<<"%"<<endl;
-        else if(i%((nevent)/100)==0&&count_z==1)cout<<"filling performance tree: "<<i*100/(nevent)+1<<"%"<<endl;
+        if(i%((nevent)/100)==0&&count_z==0)cout<<"\rFilling simulation tree: "<<i*100/(nevent)+1<<"%";
+        else if(i%((nevent)/100)==0&&count_z==1)cout<<"\rFilling performance tree: "<<i*100/(nevent)+1<<"%";
 
       }
-      cout<<"tree filled successfully"<<endl;
+      cout<<"\nTree filled successfully"<<endl;
 
      // vertFile.Write();
       vertFile.Close();
-      cout<<"file closed\n"<<"simulation done succesfully"<<endl;
+      cout<<"File closed\n"<<"Simulation done succesfully"<<endl;
 
       l1hit->Clear("C"); // controllare 
       l2hit->Clear("C");

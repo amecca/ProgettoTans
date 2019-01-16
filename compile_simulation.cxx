@@ -15,23 +15,24 @@ using std::vector;
 
 void compile_simulation(bool run = false, bool debug = false){
 		
-	vector<string> macroPaths = {
-		"src/Punto.cxx",
-		"src/Hit.cxx",
-		"src/Kinem_File.cxx",
-		"src/Intersezione.cxx",
-		"src/Trackelet.cxx",
-		"src/Simulazione.C",
-		"src/Ricostruzione.C"
+	vector<string> macroNames = {
+		"Punto.cxx",
+		"Hit.cxx",
+		"Kinem_File.cxx",
+		"Direzione.cxx",
+		"Intersezione.cxx",
+		"Trackelet.cxx",
+		"Simulazione.C",
+		"Ricostruzione.C"
 	};
 	
 	gSystem->SetBuildDir("bin", kTRUE);
 	gSystem->AddIncludePath("-I./interface");
 	//cout<<"-------\n"<<gSystem->GetIncludePath()<<"\n-------\n";
 
-	for(size_t i = 0; i < macroPaths.size(); i++){
-		if(debug) cout<<"+++ Processing \""<<macroPaths.at(i)<<"\" \t+++\n";
-		gSystem->CompileMacro(macroPaths.at(i).c_str(),"kg");
+	for(size_t i = 0; i < macroNames.size(); i++){
+		if(debug) cout<<"+++ Processing \""<<macroNames.at(i)<<"\" \t+++\n";
+		gSystem->CompileMacro(("src/"+macroNames.at(i)).c_str(),"kg");
 	}
 	if(run)
 		gROOT->ProcessLine("Simulazione()");

@@ -17,6 +17,8 @@ class Punto: public TObject
 		Double_t GetX() const {return fX;}
 		Double_t GetY() const {return fY;}
 		Double_t GetZ() const {return fZ;}
+		
+		Double_t GetPhi() const;
 
 
 	private:

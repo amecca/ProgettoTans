@@ -2,7 +2,7 @@
 #include <Riostream.h>
 #include "TObject.h"
 #include "TRandom3.h"
-#include "KInem_File.h"
+#include "Kinem_File.h"
 
 ClassImp(Direzione)
 
@@ -27,18 +27,6 @@ Direzione::Direzione(const Kinem_File * const kinem){
 }
 
 
-void Direzione::CalcolaA(Float_t RMS_XY,Float_t RMS_Z, Bool_t EstraiVert){
-
-   fX = gRandom->Gaus(0.,RMS_XY);
-   fY = gRandom->Gaus(0.,RMS_XY);
-   
-   if(EstraiVert) fZ = gRandom->Gaus(0.,RMS_Z);
-   else{
-		Double_t ZFissa[] = {-15.,-12.5,-10.,-7.5,-5.,-2.5,0.,2.5,5.,7.5,10.,12.5,15.};
-		Int_t index_fisso = (Int_t)(gRandom->Rndm()*13);
-    fZ = ZFissa[index_fisso];
-  }
-}
 
 
 

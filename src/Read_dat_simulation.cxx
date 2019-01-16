@@ -64,7 +64,7 @@ void  Read_dat_simulation(const char * filen){
 	rt=fscanf(ff,"lunghezza radiazione beam pipe: %f\n",&lung_rad[0]);
 	rt=fscanf(ff,"lunghezza radiazione silicio: %f\n",&lung_rad[1]);
 	rt=fscanf(ff,"scattering on/off: %d\n",&bool_scat);
-	rt=fscanf(ff,"contatore rumore: %d\n",&count_noise);
+	rt=fscanf(ff,"contatore rumore on/off: %d\n",&count_noise);
 	rt=fscanf(ff,"smearing on z: %f\n",&smear_z);
 	rt=fscanf(ff,"smearing on rphi: %f\n",&smear_rphi);
 	//rt=fscanf(ff,"total recostruction: %d\n",&total_reco);
