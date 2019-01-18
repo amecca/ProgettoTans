@@ -18,11 +18,12 @@ class Hit : public TObject
 		Int_t GetLabel() const {return label;}
 		
 		static Double_t deltaPhi(const Hit&, const Hit&);
+		static Double_t deltaPhi(const Hit*, const Hit*);
 
 	private:
 
 		Double_t fZ;
-		Double_t fPhi;
+		Double_t fPhi;	//Guaranteed to be between 0 and 2pi
 		Int_t label;
 
 	ClassDef(Hit,1)

@@ -1,5 +1,6 @@
 #include <Riostream.h>
 #include "TObject.h"
+#include "TMath.h"
 #include "Hit.h"
 
 
@@ -13,8 +14,10 @@ Hit::Hit():TObject(),
 
 Hit::Hit(Double_t Z, Double_t Phi, Int_t Label):TObject(),
 	fZ(Z),
-	fPhi(Phi),
 	label(Label){
+	while (Phi > 2*TMath::Pi()) Phi -= 2*TMath::Pi();
+	while (Phi <= 0) Phi += 2*TMath::Pi();
+	fPhi = Phi;
 }
 
 Hit::Hit(const Hit& original) : TObject(),
@@ -26,5 +29,15 @@ Hit::Hit(const Hit& original) : TObject(),
 Hit::~Hit(){}
 
 Double_t Hit::deltaPhi(const Hit& hit1, const Hit& hit2){
-	return hit1.fPhi - hit2.fPhi;
+	return deltaPhi(&hit1, &hit2);
+}
+
+Double_t Hit::deltaPhi(const Hit* hit1, const Hit* hit2){
+	Double_t phi1 = hit1->GetPHI();
+	Double_t phi2 = hit2->GetPHI();
+	
+	double result = phi1 - phi2;
+    while (result > TMath::Pi()) result -= 2*M_PI;
+    while (result <= -TMath::Pi()) result += 2*M_PI;
+    return fabs(result);
 }

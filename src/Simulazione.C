@@ -71,7 +71,8 @@ void Simulazione(){
       vtx.y0=pt.GetY(); 
       vtx.z0=pt.GetZ();
 
-      mult = kinem.Molteplicita(); 
+     // while(mult <1)
+      	mult = kinem.Molteplicita(); 
       vtx.m = mult;
 
       Label=1; //etichetta assegnata alla particella
@@ -133,7 +134,7 @@ void Simulazione(){
             }
             Label++; // alla fine del loop sulla molteplicità cambia il Label: particelle provenienti da molt diverse avranno molt diverse
         }
-			
+		
         // RUMORE
         Label = -1;
        	// 1° Rivelatore
@@ -148,7 +149,7 @@ void Simulazione(){
            Hit temp = p_int.Rumore(lung_beam,Label);
            new(l2_hit[j])Hit(temp.GetZ(),temp.GetPHI(),Label);
          }
-
+		
 
         vertTree->Fill();
       	l1hit->Clear(); // controllare TClonesArrey

@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define BEAM_LENGTH 30. //cm
+#define BEAM_LENGTH 27. //cm
 #define BEAM_PIPE_RADIUS 3.
 #define BEAM_PIPE_DEPTH 0.8
 #define LAYER1_RADIUS 4.
