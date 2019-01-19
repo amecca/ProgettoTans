@@ -72,7 +72,7 @@ void Simulazione(){
       vtx.z0=pt.GetZ();
 
      // while(mult <1)
-      	mult = kinem.Molteplicita(); 
+      mult = kinem.Molteplicita(); 
       vtx.m = mult;
 
       Label=1; //etichetta assegnata alla particella
@@ -82,7 +82,7 @@ void Simulazione(){
       //loop sulla MOLTEPLICITA
       for(Int_t j=0; j<mult; j++){
 
- 		Direzione direz(&kinem); // direz aggionata della prticella
+ 		Direzione direz(&kinem); // direz aggiornata della prticella
 		
         //Beam pipe
         R=Raggio[0]; // valore assegnato in Read_dat_simulation
