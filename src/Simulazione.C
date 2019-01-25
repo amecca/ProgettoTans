@@ -1,30 +1,29 @@
 #include "Riostream.h"
-#include "Punto.h"
-#include "Kinem_File.h"
-#include "Hit.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TMath.h"
+#include "TString.h"
 #include "TRandom3.h"
 #include "Direzione.h"
 #include "TClonesArray.h"
 #include "TFile.h"
+#include "TStopwatch.h"
+
+#include "Vertice.h"
+#include "Punto.h"
+#include "Kinem_File.h"
+#include "Hit.h"
 #include "Intersezione.h"
 #include "Read_dat_simulation.cxx"
 
-void Simulazione(){
-
-  typedef struct{
-    Double_t x0,y0,z0;
-    UInt_t m;
-  }VERTICE;
+TString nullTString = TString();
+void Simulazione(TString filename = nullTString){
 
   static VERTICE vtx;
 
   cout<<"Start simulation..."<<endl;
 
   Read_dat_simulation("Data/Dati_Simulazione.dat");// legge i dati e li assegna alle variabili
-
   Double_t z1_smeared,phi1_smeared,z2_smeared,phi2_smeared; // smearing 
   Double_t x0_scat,y0_scat,z0_scat,x1_scat,y1_scat,z1_scat,z2_scat; // scattering coord.
   Double_t phi0_scat,phi1_scat,phi2_scat,theta0_scat,theta1_scat; // scattering angle
@@ -34,14 +33,21 @@ void Simulazione(){
 
   Bool_t EstraiVert; // bool per distribuzione in z gaussiana o assegnata
 
-
+	TStopwatch stopwatch;
+	
   for(Int_t count_z=0; count_z<=0/*1*/; count_z++){ // Estrai=1 fz->gauss, Estrai=0 fz->scelta 
     if(count_z==1) EstraiVert = false;
     else EstraiVert = true;
 
-    // apertura file di output
-    TFile vertFile(Form("vertFile%d_noscat.root",count_z),"RECREATE"); // formats the string 
-    TTree *vertTree = new TTree("VT","Tree del Hit");
+   // apertura file di output
+    const char* trueName;
+    if(filename.Length()==0)
+    	trueName = Form("vertFile%d_noscat.root",count_z);
+	else trueName = (filename + (char)count_z).Data();
+
+    TFile vertFile(trueName,"RECREATE"); // formats the string 
+    
+    TTree* vertTree = new TTree("VT","Tree del Hit");
 	
     // Array layer
     TClonesArray *l1hit = new TClonesArray("Hit",400);
@@ -67,12 +73,12 @@ void Simulazione(){
 
       pt.Generate(rms_xy,rms_z,EstraiVert); //genera il vertice con la distribuzione assegnata 
 
-      vtx.x0=pt.GetX(); //coordinate vertice la struct VERTICE serve per scrivere sul tree 
+      vtx.x0=pt.GetX(); // coordinate vertice la struct VERTICE serve per scrivere sul tree 
       vtx.y0=pt.GetY(); 
       vtx.z0=pt.GetZ();
-
-     // while(mult <1)
-      mult = kinem.Molteplicita(); 
+      
+      //Usa la distribuzione scelta in Dati_simulazione.txt
+      mult = kinem.Molteplicita(moltTipo); //0 -> distribuzione salvata in KinemFile.root; 1 -> uniforme fra 0 e 50
       vtx.m = mult;
 
       Label=1; //etichetta assegnata alla particella
@@ -125,9 +131,8 @@ void Simulazione(){
                else{
                 if (phi2_smeared>2*TMath::Pi()) phi2_smeared = phi2_smeared - 2*TMath::Pi();
               }
-
-
-            if(z2_smeared>=-lung_beam/2&&z2_smeared<=lung_beam/2){
+              
+           if(z2_smeared>=-lung_beam/2 && z2_smeared<=lung_beam/2){
                new(l2_hit[Successi2])Hit(z2_smeared, phi2_smeared, Label); // l1 e l2 condividono il label
                Successi2++;
               }
@@ -139,15 +144,16 @@ void Simulazione(){
         Label = -1;
        	// 1° Rivelatore
   		
-        for (Int_t j=Successi1; j<Successi1+count_noise; j++){//loop sul rumore
+        for (Int_t k=Successi1; k<Successi1+count_noise; k++){//loop sul rumore
         	Hit temp = p_int.Rumore(lung_beam,Label);
-           new(l1_hit[j])Hit(temp.GetZ(),temp.GetPHI(),Label);
+        	//cout<<"\nNoise "<<j-Successi1;
+           new(l1_hit[k])Hit(temp.GetZ(),temp.GetPHI(),Label);
          }
 
          //2° Rivelatore
-         for (Int_t j=Successi2; j<Successi2+count_noise; j++){//loop sul rumore
-           Hit temp = p_int.Rumore(lung_beam,Label);
-           new(l2_hit[j])Hit(temp.GetZ(),temp.GetPHI(),Label);
+         for (Int_t k=Successi2; k<Successi2+count_noise; k++){//loop sul rumore
+           	Hit temp = p_int.Rumore(lung_beam,Label);
+           new(l2_hit[k])Hit(temp.GetZ(),temp.GetPHI(),Label);
          }
 		
 
@@ -156,17 +162,19 @@ void Simulazione(){
       	l2hit->Clear();
         if(i%((nevent)/100)==0&&count_z==0)cout<<"\rFilling simulation tree: "<<i*100/(nevent)+1<<"%";
         else if(i%((nevent)/100)==0&&count_z==1)cout<<"\rFilling performance tree: "<<i*100/(nevent)+1<<"%";
+       
 
-      }
+      } //close loop on events
+      
+      cout<<"\nElapsed time: "<<stopwatch.CpuTime()<<" s";
+      
+      vertFile.Write("", TObject::kOverwrite);
       cout<<"\nTree filled successfully"<<endl;
-
-     // vertFile.Write();
-      vertFile.Close();
-      cout<<"File closed\n"<<"Simulation done succesfully"<<endl;
-
-      l1hit->Clear("C"); // controllare 
-      l2hit->Clear("C");
-
-    }
+	  
+	  vertFile.Close();
+	  cout<<"File closed\n"<<"Simulation done succesfully"<<endl;
+		
+    } //close loop on count_z
+	
     cout<<endl;
-  }
+} //close Simulazione()

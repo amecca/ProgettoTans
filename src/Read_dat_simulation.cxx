@@ -15,31 +15,31 @@
 //
 
 using namespace std;
-bool debug = true;
-
-Int_t nevent;
-Float_t lung_beam;
-Float_t Raggio[3];
-Int_t Z[2];
-Float_t thick[2];
-Float_t lung_rad[2];
-Int_t bool_scat;
-Int_t count_noise;
-Float_t smear_z;
-Float_t smear_rphi;
-Float_t beam_rms;
-Float_t l1_rms;
-//Int_t total_reco;
-Float_t rms_z;
-Float_t rms_xy;
-//Int_t EstraiVert;
+static bool debug = true;
+static Int_t moltTipo;
+static Int_t nevent;
+static Float_t lung_beam;
+static Float_t Raggio[3];
+static Int_t Z[2];
+static Float_t thick[2];
+static Float_t lung_rad[2];
+static Int_t bool_scat;
+static Int_t count_noise;
+static Float_t smear_z;
+static Float_t smear_rphi;
+static Float_t beam_rms;
+static Float_t l1_rms;
+//static Int_t total_reco;
+static Float_t rms_z;
+static Float_t rms_xy;
+//static Int_t EstraiVert;
 
 void  Read_dat_simulation(const char * filen){
 	
 	cout<<"Opening \""<<filen<<"\"...\n";
 	
 	FILE * ff = fopen(filen,"r");// r open file for input operation
-	if (ff==NULL) {
+	if (ff == nullptr) {
 		cout << "ATTENTION : NO FILE FOUND" << endl;
 	}
 	// analysis type
@@ -64,7 +64,8 @@ void  Read_dat_simulation(const char * filen){
 	rt=fscanf(ff,"lunghezza radiazione beam pipe: %f\n",&lung_rad[0]);
 	rt=fscanf(ff,"lunghezza radiazione silicio: %f\n",&lung_rad[1]);
 	rt=fscanf(ff,"scattering on/off: %d\n",&bool_scat);
-	rt=fscanf(ff,"contatore rumore on/off: %d\n",&count_noise);
+	rt=fscanf(ff,"contatore rumore: %i\n",&count_noise);
+	rt=fscanf(ff,"tipo di molteplicita: %d\n",&moltTipo);
 	rt=fscanf(ff,"smearing on z: %f\n",&smear_z);
 	rt=fscanf(ff,"smearing on rphi: %f\n",&smear_rphi);
 	//rt=fscanf(ff,"total recostruction: %d\n",&total_reco);
@@ -75,5 +76,9 @@ void  Read_dat_simulation(const char * filen){
 
 	//  beam_rms = TMath::Sqrt(2)*13.6/800*TMath::Sqrt(thick[0]/lung_rad[0])*(1+0.038*TMath::Log(thick[0]/lung_rad[0]));
 	//  l1_rms = TMath::Sqrt(2)*13.6/800*TMath::Sqrt(thick[1]/lung_rad[1])*(1+0.038*TMath::Log(thick[1]/lung_rad[1]));
+	/*
+	delete ff;*/
+	//return;
 
 }
+

@@ -12,7 +12,7 @@ class Kinem_File:public TObject
 
   virtual ~Kinem_File();
 
-  UInt_t Molteplicita();
+  UInt_t Molteplicita(Int_t type);
   Double_t Pseudorapidita() const;
   Double_t GenTheta() const;
   Double_t GenPhi() const;

@@ -35,9 +35,16 @@ Double_t Kinem_File::GetTeta(const Double_t& eta) const{
   return 2*TMath::ATan(TMath::Exp(-eta));
 }
 //_________________________________________________________
-UInt_t Kinem_File::Molteplicita(){
-	return (UInt_t) dishmul->GetRandom();
-	 
+UInt_t Kinem_File::Molteplicita(Int_t type){
+	if(type==0) 
+		return (UInt_t) dishmul->GetRandom();
+	else if(type==1)
+		return (UInt_t) (gRandom->Rndm()*50);
+	/*else if(type == 2){
+		UInt_t possibili[10] = {5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
+		return possibili[(Uint_t)(gRandom->Rndm() *10 - 0.5)];
+	}*/
+	else return 0;
 }
 
 Kinem_File::~Kinem_File(){

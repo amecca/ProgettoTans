@@ -7,7 +7,6 @@
 #include <vector>
 #include <string>
 #include <algorithm> //std::min
-
 #include "TFile.h"
 #include "TStyle.h"
 #include "TTree.h"
@@ -17,64 +16,75 @@
 //#include "TMath.h"
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
-//#include "Read_dat_simulation.cxx"
+#include "TStopwatch.h"
 
+#include "Vertice.h"
 #include "Trackelet.h"
+//#include "Read_dat_simulation.cxx"
 
 using std::cout;
 
-const Double_t tolleranza = 2.5; //cm; range intorno alla moda in cui i vertici ricostruiti vengono mediati
+//const Double_t tolleranza = 2.5; //cm; range intorno alla moda in cui i vertici ricostruiti vengono mediati
+const Double_t tolMin = 0.5;
+const Double_t deltaPhiMin = 0.05;
 
-//Move to a separate file
-typedef struct{
-	Double_t x0,y0,z0;
-	Int_t m;
-}VERTICE;
 
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
-//Double_t deltaPhi(const Hit* hit1, const Hit* hit2);
+Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza);
+
 void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName = "VT"){
-	
-	Double_t stdDev[5];
-	Double_t sStdDev[5];
-	
-	//Histograms and Canvas
-	//TCanvas* ctagli = new TCanvas("ctagli","ctagli",10,10,1200,800);
-	//TH1I* tagli = new TH1I("tagli","Tagli",3,0,3);
-	//tagli->SetMinimum(0);
-	
-	TCanvas* cTotvsMult = new TCanvas("cTotvsMult","cTotvsMult",10,10,1200,800);
-	TCanvas* cRecvsMult = new TCanvas("cRecvsMult","cRecvsMult",10,10,1200,800);
-	
-	TCanvas* deltaZ = new TCanvas("deltaZ","#Delta z",10,10,1200,800);
-	deltaZ->Divide(3,2);
+
+	//CANVAS
 	gStyle->SetOptStat(1111111);
-	TH1F* hDeltaZs[5];
+	//Risoluzione onnicomprensiva 
+	TCanvas* cRisoluzioneAll = new TCanvas("cRisoluzioneAll","cRisoluzioneAll",10,10,1200,800);
+	TH1I* hRisoluzioneAll = new TH1I("hRisoluzioneAll","hRisoluzioneAll", 100,-0.5,0.5);
 	
-	TCanvas* EffVsPhi = new TCanvas("EffVsPhi"," EffVsPhi",10,10,1200,800);
-	EffVsPhi->Divide(3,2);
-	TH1F* hRecVsPhiVsMolt[5];
-	
-	TCanvas* cEffVsMolt = new TCanvas("cEffVsMolt","Efficienza", 10,10,1200,800);
-	TH1I* hRecVsMolt = new TH1I("hRecVsMolt","Ricostruiti",6,0,60);
-	TH1I* hTotVsMolt = new TH1I("hTotVsMolt","Totali",6,0,60);
-	
-	TCanvas* cRisoluzione = new TCanvas("cRisoluzione","Risoluzione", 10,10,1200,800);
-	
-	for(int i = 0; i < 5; i++){
-		char hName[30] = "hDeltaZ";
-		strcat(hName,(char*)&i);
-		char hTitle[30] = "Z_{rec} - Z_{true} ";
-		strcat(hTitle,(char*)&i);
-		hDeltaZs[i] = new TH1F(hName, hTitle, 100,-0.5,0.5);
-		
-		char hName2[30] = "hRecVsPhiVsMolt";
-		strcat(hName2,(char*)&i);
-		char hTitle2[30] = "Titolo ";
-		strcat(hTitle2,(char*)&i);
-		hRecVsPhiVsMolt[i] = new TH1F(hName2, hTitle2, 6,0,60);
-		
+	//Risoluzione al variare di Ztrue
+	Double_t stdDevZ[11];
+	Double_t sStdDevZ[11];
+	std::vector<Double_t> xZ = {-13,-10,-7,-4,-2,0,2,4,7,10,13};
+	Double_t sxZ[11];
+	TCanvas* cRisoluzioneVsZtrue = new TCanvas("cRisoluzioneVsZtrue","cRisoluzioneVsZtrue",10,10,1200,800);
+	TGraphErrors* hRisoluzioneVsZtrue;// = new TGraphErrors(11, xZ, stdDevZ, sxZ, sStdDevZ); //Sarà riempito prima di essere disegnato
+	TH1I* hDeltaZs[11];
+	for(size_t i=0; i<xZ.size(); i++){
+		hDeltaZs[i] = new TH1I(Form("deltaZ%lu",i),Form("deltaZ%lu",i), 100,-0.5,0.5);
+		sxZ[i] = 1./sqrt(12);
 	}
+	
+	//Risoluzione al variare della molteplicità
+	Double_t stdDevMol[10];
+	Double_t sStdDevMol[10];
+	std::vector<Double_t> xMol = {5,10,15,20,25,30,35,40,45,50};
+	Double_t sxMol[10];
+	for(size_t k=0; k<xMol.size(); k++) sxMol[k] = sqrt(xMol[k]); //Errore statistico
+	TCanvas* cRisoluzioneVsMolt = new TCanvas("cRisoluzioneVsMolt","cRisoluzioneVsMolt",10,10,1200,800);
+	TGraphErrors* hRisoluzioneVsMolt; //= new TGraphErrors(10, xMol, stdDevMol, sStdDevMol);
+	TH1I* hRisols[11];
+	for(size_t i=0; i<xMol.size(); i++){
+		hRisols[i] = new TH1I(Form("Risol%lu",i),Form("RisolZ%lu",i), 100,-0.5,0.5);
+		sxMol[i] = 1./sqrt(12);
+	}
+	
+	//Efficienza al variare della molteplicità
+	TCanvas* cEfficienzaVsMolt = new TCanvas("cEfficienzaVsMolt","cEfficienzaVsMolt",10,10,1200,800);
+	TGraphAsymmErrors* hEfficienzaVsMolt;
+	TH1I* hTotaliVsMolt = new TH1I("hTotaliVsMolt", "Totali;Molteplicita';# eventi", 10,0,50);
+	TH1I* hRicostruitiVsMolt = new TH1I("hRicostruitiVsMolt", "Ricostruiti;Molteplicita';# eventi", 10,0,50);
+	
+	//Efficienza/Molteplicità per eventi ricostruiti entro 1 sigma (rms z)
+	TCanvas* cEfficienzaVsMolt1sigma = new TCanvas("cEfficienzaVsMolt1sigma","Efficienza (entro 1 sigma)",10,10,1200,800);
+	TGraphAsymmErrors* hEfficienzaVsMolt1sigma;
+	TH1I* hTotaliVsMolt1sigma = new TH1I("hTotaliVsMolt1sigma", "Totali (1sigma);Molteplicita';# eventi", 10,0,50);
+	TH1I* hRicostruitiVsMolt1sigma = new TH1I("hRicostruitiVsMolt1sigma", "Ricostruiti (1sigma);Molteplicita';# eventi", 10,0,50);
+	
+	//Efficienza al variare della Ztrue
+	TCanvas* cEfficienzaVsZ = new TCanvas("cEfficienzaVsZ","cEfficienzaVsZ",10,10,1200,800);
+	TGraphAsymmErrors* hEfficienzaVsZ;
+	TH1I* hTotaliVsZ = new TH1I("hTotaliVsZ", "Totali;Z_{true} [cm];# eventi", 13,-19.5,19.5);
+	TH1I* hRicostruitiVsZ = new TH1I("hRicostruitiVsZ", "Ricostruiti;Z_{true} [cm];# eventi", 13,-19.5,19.5);
+	
 	
 	//Open file and tree
 	TFile* sourceFile = new TFile(fileName.Data());
@@ -93,9 +103,6 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 		return;
 	}
 	
-	//Read constants from file
-	//Read_dat_simulation("Data/Dati_Simulazione.dat");
-	
 	//Containers
 	VERTICE vtx;
 	TClonesArray* L1Hits = new TClonesArray("Hit", 400);
@@ -106,146 +113,99 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	tree->GetBranch("L2_hit")->SetAddress(&L2Hits);
 	tree->SetBranchStatus("*",1); //Activates reading of all branches
 	
-	//Main loop
+	TStopwatch stopwatch;
+	//Main loop over entries
 	long nEntries = tree->GetEntries();
 	cout<<"Processing "<<nEntries<<" entries: ";
 	UInt_t nonRicostruiti = 0;
-	const bool tutti = false;
-	for(long e = 0; e < (tutti ? nEntries : 1000); e++){
-		//tagli->Fill(0);
-		if(tree->GetEntry(e) <= 0) continue;
-		//cout<<"\r\t\t\t\t"<<e+1;
-		
-		//Riempimento dei grafici "Numero totale di eventi"
-		hTotVsMolt->Fill(vtx.m);
+	const bool tutti = true;
+	
+	for(long e = 0; e < (tutti ? nEntries : 20000); e++){
 
+		if(tree->GetEntry(e) <= 0) continue;
+		cout<<"\r\t\t\t\t"<<e+1;
+
+		hTotaliVsMolt->Fill(vtx.m);
+		if(fabs(vtx.z0) < 5.3 /*rms_z*/) hTotaliVsMolt1sigma->Fill(vtx.m);
+		hTotaliVsZ->Fill(vtx.z0);
 		
-		Trackelet* dummyTrackelet = new Trackelet(); //memory allocation
-		TObject* thisObj1;
-		TObject* thisObj2;
-		Hit* thisHit1; 
-		Hit* thisHit2;
-//		std::vector<Double_t> zRicostruiti;
-		std::vector<Double_t> zRicostruiti[5];
-		
-		for(Int_t l = 0; l<5; l++){
-		
-			for(int i = 0; i < L1Hits->GetEntries(); i++){
-				thisObj1 = (*L1Hits)[i];
-				thisHit1 = (Hit*)thisObj1;
+		Double_t zRicostruito = findZ(L1Hits, L2Hits, deltaPhiMin, tolMin);
+		if(zRicostruito <-999.){
+			nonRicostruiti++;
+			//cout<<"\n-1000"<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
+		    
+		}
+		else{
+			Double_t deltaZ = zRicostruito - vtx.z0;
+			hRisoluzioneAll->Fill(deltaZ);
 			
-				for(int j = 0; j < L2Hits->GetEntries(); j++){
-					thisObj2 = (*L2Hits)[j];
-					thisHit2 = (Hit*)thisObj2;
-				
-					
-					if(Hit::deltaPhi(thisHit1,thisHit2)<0.03*(l+1)){ 
-						 new(dummyTrackelet) Trackelet(thisHit1, thisHit2); //Avoid alloc-dealloc overhead by reusing the same memory
-						zRicostruiti[l].push_back(dummyTrackelet->findZVertex());
-					}
+			for(size_t i=0; i<xZ.size(); i++){
+				if(fabs(vtx.z0 - xZ[i]) < 1.5){
+					hDeltaZs[i]->Fill(deltaZ);
+					break;
 				}
 			}
-		}
-	
-		//tagli->Fill(1);
-		
-		TH1I hFindModa[5];
-		for(size_t k = 0; k<5; k++){
-			char hName[20] = "hciccio";
-			strcat(hName,(char*)&k);
-			hFindModa[k] = TH1I(hName, hName,40,-20,20);
-			for(size_t j = 0; j < zRicostruiti[k].size(); j++){
-				hFindModa[k].Fill(zRicostruiti[k].at(j));
-				
-			}	
-		}
-		
-		//GetMaximumBin() -> trova il numero del bin (asse x) corrispondente al valore massimo (sulle y)
-		//GetBinLowEdge() -> trova il valore dell'estremo inf del bin (asse y)
-		//GetBinWidth() -> larghezza del bin: vogliamo ottenere il centro della cella
-		
-		for(size_t j = 0; j<5;j++){
-		if(zRicostruiti[j].size() == 0){
-		
-			cout<<"\nj = "<<j<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
-			cout<<"\n\tL1: ";
-			for(int i = 0; i < L1Hits->GetEntries(); i++){
-				thisObj1 = (*L1Hits)[i];
-				thisHit1 = (Hit*)thisObj1;
-				cout<<thisHit1->GetPHI()<<" ";
+			for(size_t i=0; i<xMol.size(); i++){
+				if(fabs(vtx.m - xMol[i]) < 1){
+					hRisols[i]->Fill(deltaZ);
+					break;
+				}
 			}
-			cout<<"\n\tL2: ";
-			for(int in = 0; in < L2Hits->GetEntries(); in++){
-				thisObj2 = (*L2Hits)[in];
-				thisHit2 = (Hit*)thisObj2;
-				cout<<thisHit2->GetPHI()<<" ";
-			}
-			continue;
+			hRicostruitiVsMolt->Fill(vtx.m);
+			if(fabs(vtx.z0) < 5.3/*rms_z*/) hRicostruitiVsMolt1sigma->Fill(vtx.m);
+			hRicostruitiVsZ->Fill(vtx.z0);
 		}
-		Int_t binMaximum = hFindModa[j].GetMaximumBin();
-		Double_t zModa = hFindModa[j].GetXaxis()->GetBinCenter(binMaximum);
-		Double_t zRicostruitoMean = mediaIntornoA(zRicostruiti[j], zModa, tolleranza);
-			if(zRicostruitoMean <-999.){
-				nonRicostruiti++;
-				cout<<"\n-1000"<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
-			}
-			else{
-				hRecVsPhiVsMolt[j]->Fill(vtx.m);
-				//if(j == 2) hRecVsMolt->Fill(vtx.m,1);
-				const Double_t risoluzione = zRicostruitoMean - vtx.z0;
-				hDeltaZs[j]->Fill(risoluzione); //Risoluzione inclusiva
-				//tagli->Fill(2);
-			}	
-			
-		}
-		delete dummyTrackelet;
-		//delete thisObj1;
-		//delete thisHit1;
+		
 		
 		//hZetaV->Fill(vtx.z0,1);
 		
 		L1Hits->Clear("C");
 		L1Hits->Clear("C");
 	}
-	//cout<<"\nEventi non ricostruiti: "<<nonRicostruiti<<'\n';
-	//Draw
-	//cZetaV->cd();
-	//hZetaV->Draw();
-	/*
-	Double_t BestSigma = 100.;
-	Int_t indexOfBest = 0;
-	for(Int_t i=0;i<5;i++){
-	 	Double_t temp = hDeltaZs[i]->GetStdDev();
-	 	if(temp < BestSigma){
-	 		BestSigma = temp;
-	 		indexOfBest = i;
- 		}
-	}
-	cout<<"\nBest phi choice: "<<indexOfBest<<" --> phi = "<<(indexOfBest+1)*0.02<<'\n';
-	deltaZ->cd();
-	hDeltaZs[indexOfBest]->Draw();*/
-
-	for(int intero = 0; intero <5; intero++){
-		//deltaZ->cd(intero+1);
-		//hDeltaZs[intero]->Draw();
-		stdDev[intero] = hDeltaZs[intero]->GetStdDev();
-		sStdDev[intero] = hDeltaZs[intero]->GetStdDevError();
-	}
 	
-	Double_t x[] = {1,2,3,4,5};
-	Double_t sx[] = {0,0,0,0,0};
-	TGraphErrors* hRisoluzione = new TGraphErrors(5, x, stdDev, sx, sStdDev);
+	cout<<"\nElapsed time: "<<stopwatch.CpuTime()<<" s\n";
 	
-	cRisoluzione->cd();
-	hRisoluzione->Draw();
+	cRisoluzioneAll->cd();
+	hRisoluzioneAll->Draw();
 	
-	TGraphAsymmErrors* resVsPhi[5];
-	for(int c= 0; c<5; c++){
-		EffVsPhi->cd(c+1);
-		resVsPhi[c] = new TGraphAsymmErrors(hRecVsPhiVsMolt[c], hTotVsMolt, "cp");
-		resVsPhi[c]->SetMinimum(0.);
-		resVsPhi[c]->Draw();
+	//Recupero i dati per i grafici
+	for(size_t i = 0; i < xZ.size(); i++){
+		stdDevZ[i] = hDeltaZs[i]->GetStdDev();
+		sStdDevZ[i] = hDeltaZs[i]->GetStdDevError();
 	}
+	cRisoluzioneVsZtrue->cd();
+	hRisoluzioneVsZtrue = new TGraphErrors(xZ.size(), &(xZ[0]), stdDevZ, sxZ, sStdDevZ);
+	hRisoluzioneVsZtrue->SetTitle("Risoluzione vs Z_{true};Z_{true} [cm];Risoluzione [cm]");
+	hRisoluzioneVsZtrue->SetMinimum(0.);
+	hRisoluzioneVsZtrue->Draw();
+	
+	for(size_t i = 0; i < xMol.size(); i++){
+		stdDevMol[i] = hRisols[i]->GetStdDev();
+		sStdDevMol[i] = hRisols[i]->GetStdDevError();
+	}
+	cRisoluzioneVsMolt->cd();
+	hRisoluzioneVsZtrue = new TGraphErrors(xMol.size(), &(xMol[0]), stdDevMol, sxMol, sStdDevMol);
+	hRisoluzioneVsZtrue->SetTitle("Risoluzione vs Molteplicita';Molteplicita';Risoluzione [cm]");
+	hRisoluzioneVsZtrue->SetMinimum(0.);
+	hRisoluzioneVsZtrue->Draw();
+	
+	cEfficienzaVsMolt->cd();
+	hEfficienzaVsMolt = new TGraphAsymmErrors(hRicostruitiVsMolt, hTotaliVsMolt);
+	hEfficienzaVsMolt->SetTitle("Efficienza;Molteplicita';Ricostruiti/Totali");
+	hEfficienzaVsMolt->SetMinimum(0.);
+	hEfficienzaVsMolt->Draw();
+	
+	cEfficienzaVsMolt1sigma->cd();
+	hEfficienzaVsMolt1sigma = new TGraphAsymmErrors(hRicostruitiVsMolt1sigma, hTotaliVsMolt1sigma);
+	hEfficienzaVsMolt1sigma->SetTitle("Efficienza (vertice entro 1#sigma);Molteplicita';Ricostruiti/Totali");
+	hEfficienzaVsMolt1sigma->SetMinimum(0.);
+	hEfficienzaVsMolt1sigma->Draw();
+	
+	cEfficienzaVsZ->cd();
+	hEfficienzaVsZ = new TGraphAsymmErrors(hRicostruitiVsZ, hTotaliVsZ);
+	hEfficienzaVsZ->SetTitle("Efficienza vs Z_{true};Z_{true} [cm]';Ricostruiti/Totali");
+	hEfficienzaVsZ->SetMinimum(0.);
+	hEfficienzaVsZ->Draw();
 	
 	//ctagli->cd();
 	//tagli->Draw();
@@ -267,13 +227,18 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	//cZetaL1->cd();
 	//hZetaL1->Draw();
 	
-	delete L1Hits;
-	delete L2Hits;
 	sourceFile->Close();
 	cout<<"\nNon Ricostruiti: "<<nonRicostruiti<<"\n";
 	return;
 }
 
+
+
+
+
+
+
+//Implementazione
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza){
 	Double_t temp = 0.;
 	UInt_t zMediati = 0;
@@ -286,21 +251,79 @@ Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t
 	if(zMediati > 0)
 		return temp/zMediati;
 	else{
-		cout<<"\n-----------------------------------------\n";
-		cout<<"zModa = "<<zModa<<"\nzRicostruiti = ";
-		for(size_t k = 0; k < zRicostruiti.size(); k++)
-			cout<<zRicostruiti.at(k)<<"  ";
+		//cout<<"\n-----------------------------------------\n";
+		//cout<<"zModa = "<<zModa<<"\nzRicostruiti = ";
+		//for(size_t k = 0; k < zRicostruiti.size(); k++)
+			//cout<<zRicostruiti.at(k)<<"  ";
 		return -1000.;
 	}
 }
 
-/*
-Double_t deltaPhi(const Hit* hit1, const Hit* hit2){
-	Double_t phi1 = hit1->GetPHI();
-	Double_t phi2 = hit2->GetPHI();
+Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza){
 	
-	double result = phi1 - phi2;
-    while (result > TMath::Pi()) result -= 2*M_PI;
-    while (result <= -TMath::Pi()) result += 2*M_PI;
-    return fabs(result);
-}*/
+	TObject* thisObj1;
+	TObject* thisObj2;
+	Hit* thisHit1; 
+	Hit* thisHit2;
+	Trackelet* dummyTrackelet = new Trackelet();
+	
+	std::vector<Double_t> zRicostruiti;
+	for(int i = 0; i < L1Hits->GetEntries(); i++){
+		thisObj1 = (*L1Hits)[i];
+		thisHit1 = (Hit*)thisObj1;
+		
+		for(int j = 0; j < L2Hits->GetEntries(); j++){
+			thisObj2 = (*L2Hits)[j];
+			thisHit2 = (Hit*)thisObj2;
+				
+			if(Hit::deltaPhi(thisHit1,thisHit2) < deltaPhi){ 
+				new(dummyTrackelet) Trackelet(thisHit1, thisHit2); //Avoid alloc-dealloc overhead by reusing the same memory
+				zRicostruiti.push_back(dummyTrackelet->findZVertex());
+			}
+		}
+	}
+	
+			
+	TH1I hFindModa = TH1I("findModa", "findModa",40,-20,20);
+	for(size_t j = 0; j < zRicostruiti.size(); j++){
+		hFindModa.Fill(zRicostruiti.at(j));
+	}
+		
+	//GetMaximumBin() -> trova il numero del bin (asse x) corrispondente al valore massimo (sulle y)
+		
+	if(zRicostruiti.size() == 0){
+		/*
+		cout<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
+		cout<<"\n\tL1: ";
+		for(int i = 0; i < L1Hits->GetEntries(); i++){
+			thisObj1 = (*L1Hits)[i];
+			thisHit1 = (Hit*)thisObj1;
+			cout<<thisHit1->GetPHI()<<" ";
+		}
+		cout<<"\n\tL2: ";
+		for(int in = 0; in < L2Hits->GetEntries(); in++){
+			thisObj2 = (*L2Hits)[in];
+			thisHit2 = (Hit*)thisObj2;
+			cout<<thisHit2->GetPHI()<<" ";
+		}*/
+		return -1050.;
+	}
+
+	Int_t binMaximum = hFindModa.GetMaximumBin();
+	Double_t zModa = hFindModa.GetXaxis()->GetBinCenter(binMaximum);
+	Double_t zRicostruitoMean = mediaIntornoA(zRicostruiti, zModa, tolleranza);
+	/*
+	if(zRicostruitoMean <-999.){
+		nonRicostruiti++;
+		cout<<"\n-1000"<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
+	}
+	else{
+		hRecVsPhiVsMolt->Fill(vtx.m);
+		const Double_t risoluzione = zRicostruitoMean - vtx.z0;
+		hDeltaZs->Fill(risoluzione); //Risoluzione inclusiva
+	}*/
+
+	delete dummyTrackelet;
+	
+	return zRicostruitoMean;
+}
