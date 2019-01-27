@@ -17,6 +17,7 @@
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TStopwatch.h"
+#include "TSystem.h"
 
 #include "Vertice.h"
 #include "Trackelet.h"
@@ -28,17 +29,17 @@ using std::cout;
 const Double_t tolMin = 0.5;
 const Double_t deltaPhiMin = 0.05;
 
-
+TFile* findAndOpenFile(const TString& filename);
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
 Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza);
 
 void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName = "VT"){
 
 	//CANVAS
-	gStyle->SetOptStat(1111111);
+	gStyle->SetOptStat(111111);
 	//Risoluzione onnicomprensiva 
-	TCanvas* cRisoluzioneAll = new TCanvas("cRisoluzioneAll","cRisoluzioneAll",10,10,1200,800);
-	TH1I* hRisoluzioneAll = new TH1I("hRisoluzioneAll","hRisoluzioneAll", 100,-0.5,0.5);
+	TCanvas* cRisoluzioneAll = new TCanvas("cRisoluzioneAll","Risoluzione",10,10,1200,800);
+	TH1I* hRisoluzioneAll = new TH1I("hRisoluzioneAll","Risoluzione inclusva", 200,-0.2,0.2);
 	
 	//Risoluzione al variare di Ztrue
 	Double_t stdDevZ[11];
@@ -87,19 +88,12 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	
 	
 	//Open file and tree
-	TFile* sourceFile = new TFile(fileName.Data());
-	if(sourceFile->IsZombie()){
-		cout<<"Error: \""<<fileName<<"\" not found\n";
-		return;
-	}
-	else if(!(sourceFile->IsOpen())){
-		cout<<"Error: could not open \""<<fileName<<"\"\n";
-		return;
-	}
+	TFile* sourceFile = findAndOpenFile(fileName);
+	if (!sourceFile) return;
 	
 	TTree* tree = (TTree*)(sourceFile->Get(treeName.Data()));
 	if(!tree){
-		cout<<"\n\""<<tree<<"\" not found in \""<<fileName<<"\"\n";
+		cout<<"\n\""<<treeName<<"\" not found in \""<<fileName<<"\"\n";
 		return;
 	}
 	
@@ -207,32 +201,11 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	hEfficienzaVsZ->SetMinimum(0.);
 	hEfficienzaVsZ->Draw();
 	
-	//ctagli->cd();
-	//tagli->Draw();
-	
-	//cTotvsMult->cd();
-	//hTotVsMolt->Draw();
-	
-	//cRecvsMult->cd();
-	//hRecVsMolt->Draw();
-	
-	/*
-	cEffVsMolt->cd();
-	TGraphAsymmErrors* hEffVsMolt = new TGraphAsymmErrors(hRecVsMolt, hTotVsMolt,"cp"); //cp -> Clopper-Pearson
-	hEffVsMolt->SetMinimum(0.);
-	hEffVsMolt->SetMaximum(1.);
-	hEffVsMolt->Draw();
-	*/
-	
-	//cZetaL1->cd();
-	//hZetaL1->Draw();
 	
 	sourceFile->Close();
-	cout<<"\nNon Ricostruiti: "<<nonRicostruiti<<"\n";
+	//cout<<"\nNon Ricostruiti: "<<nonRicostruiti<<"\n";
 	return;
 }
-
-
 
 
 
@@ -326,4 +299,25 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 	delete dummyTrackelet;
 	
 	return zRicostruitoMean;
+}
+
+TFile* findAndOpenFile(const TString& fileName){
+	TFile* sourceFile;
+	if (!gSystem->AccessPathName("Trees/"+fileName+".root",kFileExists))
+		sourceFile = new TFile(("Trees/"+fileName+".root").Data());
+	else if (!gSystem->AccessPathName("Trees/"+fileName,kFileExists))
+		sourceFile = new TFile(("Trees/"+fileName).Data());
+	else if(!gSystem->AccessPathName(fileName+".root",kFileExists))
+		sourceFile = new TFile((fileName+".root").Data());
+	else if(!gSystem->AccessPathName(fileName,kFileExists))
+		sourceFile = new TFile(fileName.Data());
+	else
+		cout<<"Error: \""<<fileName<<"\" not found\n";
+	
+	if(sourceFile->IsZombie() || !(sourceFile->IsOpen())){
+		cout<<"Error: could not open \""<<fileName<<"\"\n";
+		return nullptr;
+	} else cout<<"Opened \""<<fileName<<"\"\n";
+	
+	return sourceFile;
 }

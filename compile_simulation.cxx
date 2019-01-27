@@ -39,4 +39,3 @@ void compile_simulation(bool run = false, bool debug = false){
 		gROOT->ProcessLine("Simulazione()");
 }
 
-
