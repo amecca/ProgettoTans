@@ -63,16 +63,22 @@ void  Read_dat_simulation(const char * filen){
 	rt=fscanf(ff,"spessore layer 1: %f\n",&thick[1]);
 	rt=fscanf(ff,"lunghezza radiazione beam pipe: %f\n",&lung_rad[0]);
 	rt=fscanf(ff,"lunghezza radiazione silicio: %f\n",&lung_rad[1]);
-	rt=fscanf(ff,"scattering on/off: %d\n",&bool_scat);
-	rt=fscanf(ff,"contatore rumore: %i\n",&count_noise);
-	rt=fscanf(ff,"tipo di molteplicita: %d\n",&moltTipo);
 	rt=fscanf(ff,"smearing on z: %f\n",&smear_z);
 	rt=fscanf(ff,"smearing on rphi: %f\n",&smear_rphi);
+	rt=fscanf(ff,"scattering on/off: %i\n",&bool_scat);
+	rt=fscanf(ff,"contatore rumore: %i\n",&count_noise);
+	rt=fscanf(ff,"tipo di molteplicita: %i\n",&moltTipo);
 	//rt=fscanf(ff,"total recostruction: %d\n",&total_reco);
 	//  rt=fscanf(ff,"estrai vertice: %d\n",&EstraiVert);
 
 	beam_rms = 13.6/800*TMath::Sqrt(thick[0]/lung_rad[0])*(1+0.038*TMath::Log(thick[0]/lung_rad[0]));
 	l1_rms = 13.6/800*TMath::Sqrt(thick[1]/lung_rad[1])*(1+0.038*TMath::Log(thick[1]/lung_rad[1]));
+	
+	cout<<"smear_z = "<<smear_z;
+	cout<<"\nsmear_rphi = "<<smear_rphi;
+	cout<<"\nbool_scat = "<<bool_scat;
+	cout<<"\ncount_noise = "<<count_noise;
+	cout<<"\nmoltTipo = "<<moltTipo<<'\n';
 
 	//  beam_rms = TMath::Sqrt(2)*13.6/800*TMath::Sqrt(thick[0]/lung_rad[0])*(1+0.038*TMath::Log(thick[0]/lung_rad[0]));
 	//  l1_rms = TMath::Sqrt(2)*13.6/800*TMath::Sqrt(thick[1]/lung_rad[1])*(1+0.038*TMath::Log(thick[1]/lung_rad[1]));

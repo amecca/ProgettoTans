@@ -28,11 +28,10 @@ using std::cout;
 
 //const Double_t tolleranza = 2.5; //cm; range intorno alla moda in cui i vertici ricostruiti vengono mediati
 const Double_t tolMin = 0.5;
-const Double_t deltaPhiMin = 0.05;
+const Double_t deltaPhiMin = 0.005;//0.05;ris->0.029
 
-TFile* findAndOpenFile(const TString& filename);
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
-Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza);
+Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza, bool debug = false);
 
 void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 0){
 	TString treeName = "VT";
@@ -87,6 +86,24 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	TH1I* hTotaliVsZ = new TH1I("hTotaliVsZ", "Totali;Z_{true} [cm];# eventi", 13,-19.5,19.5);
 	TH1I* hRicostruitiVsZ = new TH1I("hRicostruitiVsZ", "Ricostruiti;Z_{true} [cm];# eventi", 13,-19.5,19.5);
 	
+	//Risoluzione al variare di maxPhi (nella ricostruzione delle tracce)
+	Double_t stdDevPhi[8];
+	Double_t sStdDevPhi[8];
+	std::vector<Double_t> xPhi = {0.0001,0.0002,0.0003,0.0005,0.001,0.002,0.005,0.01};
+	Double_t sxPhi[8];
+	TCanvas* cRisoluzioneVsMaxPhi = new TCanvas("cRisoluzioneVsMaxPhi","cRisoluzioneVsMaxPhi",10,10,1200,800);
+	TGraphErrors* hRisoluzioneVsMaxPhi;// = new TGraphErrors(11, &xPhi[0], stdDevPhi, sxPhi, sStdDevPhi); //Sarà riempito prima di essere disegnato
+	TH1I* hRisoluzionePhis[8];
+	for(size_t i=0; i<xPhi.size(); i++){
+		hRisoluzionePhis[i] = new TH1I(Form("Phi%lu",i),Form("Phi%lu",i), 100,-0.5,0.5);
+		sxPhi[i] = 0.;
+	}
+	
+	//Efficienza al variare di maxPhi (nella ricostruzione delle tracce)
+	TCanvas* cEfficienzaVsPhi = new TCanvas("cEfficienzaVsPhi","cEfficienzaVsPhi", 10,10,1200,800);
+	TGraphAsymmErrors* hEfficienzaVsPhi;
+	TH1I* hTotPhi = new TH1I("hTotPhi","hTotPhi", 101,0.,0.0101);
+	TH1I* hEffPhi = new TH1I("hEffPhi","hEffPhi", 101,0.,0.0101);
 	
 	//Open file and tree
 	TFile* sourceFile = Utils::findAndOpenFile(fileName);
@@ -151,6 +168,17 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 			hRicostruitiVsZ->Fill(vtx.z0);
 		}
 		
+		//Risoluzione al variare della phiMax
+		for(size_t i = 0; i < xPhi.size(); i++){
+			hTotPhi->Fill(xPhi[i]);
+			Double_t zRec = findZ(L1Hits, L2Hits, xPhi[i], tolMin);
+			//cout<<xPhi[i]<<"   "<<zRec<<'\n';
+			if(fabs(zRec-vtx.z0) > 5.) continue;
+			else{
+				hRisoluzionePhis[i]->Fill(zRec - vtx.z0);
+				hEffPhi->Fill(xPhi[i]);
+			}
+		}
 		
 		//hZetaV->Fill(vtx.z0,1);
 		
@@ -202,6 +230,22 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	hEfficienzaVsZ->SetMinimum(0.);
 	hEfficienzaVsZ->Draw();
 	
+	//Risoluzione al variare di phiMax
+	for(size_t i = 0; i < xPhi.size(); i++){
+		stdDevPhi[i] = hRisoluzionePhis[i]->GetStdDev();
+		sStdDevPhi[i] = hRisoluzionePhis[i]->GetStdDevError();
+	}
+	cRisoluzioneVsMaxPhi->cd();
+	hRisoluzioneVsMaxPhi = new TGraphErrors(11, &xPhi[0], stdDevPhi, sxPhi, sStdDevPhi);
+	hRisoluzioneVsMaxPhi->SetMinimum(0.);
+	hRisoluzioneVsMaxPhi->SetTitle("Risoluzione Vs #phi max; #phi max [rad]");
+	hRisoluzioneVsMaxPhi->Draw("AP");
+	
+	cEfficienzaVsPhi->cd();
+	hEfficienzaVsPhi = new TGraphAsymmErrors(hEffPhi, hTotPhi);
+	hEfficienzaVsPhi->SetMinimum(0.);
+	hEfficienzaVsPhi->SetTitle("Efficienza Vs #phi max; #phi max [rad]");
+	hEfficienzaVsPhi->Draw();
 	
 	sourceFile->Close();
 	//cout<<"\nNon Ricostruiti: "<<nonRicostruiti<<"\n";
@@ -233,13 +277,12 @@ Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t
 	}
 }
 
-Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza){
+Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& maxPhi, const Double_t& tolleranza, bool debug){
 	
 	TObject* thisObj1;
 	TObject* thisObj2;
 	Hit* thisHit1; 
 	Hit* thisHit2;
-	Trackelet* dummyTrackelet = new Trackelet();
 	
 	std::vector<Double_t> zRicostruiti;
 	for(int i = 0; i < L1Hits->GetEntries(); i++){
@@ -250,9 +293,9 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 			thisObj2 = (*L2Hits)[j];
 			thisHit2 = (Hit*)thisObj2;
 				
-			if(Hit::deltaPhi(thisHit1,thisHit2) < deltaPhi){ 
-				new(dummyTrackelet) Trackelet(thisHit1, thisHit2); //Avoid alloc-dealloc overhead by reusing the same memory
-				zRicostruiti.push_back(dummyTrackelet->findZVertex());
+			if(Hit::deltaPhi(thisHit1,thisHit2) < maxPhi){ 
+				Trackelet dummyTrackelet(thisHit1, thisHit2);
+				zRicostruiti.push_back(dummyTrackelet.findZVertex());
 			}
 		}
 	}
@@ -263,23 +306,22 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 		hFindModa.Fill(zRicostruiti.at(j));
 	}
 		
-	//GetMaximumBin() -> trova il numero del bin (asse x) corrispondente al valore massimo (sulle y)
-		
 	if(zRicostruiti.size() == 0){
-		/*
-		cout<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
-		cout<<"\n\tL1: ";
-		for(int i = 0; i < L1Hits->GetEntries(); i++){
-			thisObj1 = (*L1Hits)[i];
-			thisHit1 = (Hit*)thisObj1;
-			cout<<thisHit1->GetPHI()<<" ";
+		if(debug){
+			//cout<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
+			cout<<"\n\tL1: ";
+			for(int i = 0; i < L1Hits->GetEntries(); i++){
+				thisObj1 = (*L1Hits)[i];
+				thisHit1 = (Hit*)thisObj1;
+				cout<<thisHit1->GetPHI()<<" ";
+			}
+			cout<<"\n\tL2: ";
+			for(int in = 0; in < L2Hits->GetEntries(); in++){
+				thisObj2 = (*L2Hits)[in];
+				thisHit2 = (Hit*)thisObj2;
+				cout<<thisHit2->GetPHI()<<" ";
+			}
 		}
-		cout<<"\n\tL2: ";
-		for(int in = 0; in < L2Hits->GetEntries(); in++){
-			thisObj2 = (*L2Hits)[in];
-			thisHit2 = (Hit*)thisObj2;
-			cout<<thisHit2->GetPHI()<<" ";
-		}*/
 		return -1050.;
 	}
 
@@ -291,35 +333,6 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 		nonRicostruiti++;
 		cout<<"\n-1000"<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
 	}
-	else{
-		hRecVsPhiVsMolt->Fill(vtx.m);
-		const Double_t risoluzione = zRicostruitoMean - vtx.z0;
-		hDeltaZs->Fill(risoluzione); //Risoluzione inclusiva
-	}*/
-
-	delete dummyTrackelet;
-	
+	*/
 	return zRicostruitoMean;
 }
-
-/*
-TFile* findAndOpenFile(const TString& fileName){
-	TFile* sourceFile;
-	if (!gSystem->AccessPathName("Trees/"+fileName+".root",kFileExists))
-		sourceFile = new TFile(("Trees/"+fileName+".root").Data());
-	else if (!gSystem->AccessPathName("Trees/"+fileName,kFileExists))
-		sourceFile = new TFile(("Trees/"+fileName).Data());
-	else if(!gSystem->AccessPathName(fileName+".root",kFileExists))
-		sourceFile = new TFile((fileName+".root").Data());
-	else if(!gSystem->AccessPathName(fileName,kFileExists))
-		sourceFile = new TFile(fileName.Data());
-	else
-		cout<<"Error: \""<<fileName<<"\" not found\n";
-	
-	if(sourceFile->IsZombie() || !(sourceFile->IsOpen())){
-		cout<<"Error: could not open \""<<fileName<<"\"\n";
-		return nullptr;
-	} else cout<<"Opened \""<<fileName<<"\"\n";
-	
-	return sourceFile;
-}*/

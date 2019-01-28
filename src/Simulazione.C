@@ -171,5 +171,5 @@ void Simulazione(TString filename = nullTString){
 
 	} //close loop on count_z
 	
-	cout<<"Succesful simulation";
+	cout<<"Succesful simulation\n";
 } //close Simulazione()

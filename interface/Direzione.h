@@ -14,13 +14,12 @@ class Direzione: public TObject
 
 		virtual ~Direzione();
 
-		void CalcolaA(); // calcB e calcC
-
+		//void CalcolaA(); // calcB e calcC
 
 		Double_t GetPHI() const {return fph;}
 		Double_t GetTHETA() const {return fth;}
-
-
+		void SetPhi(const Double_t& phi) {fph = phi;}
+		void SetTheta(const Double_t& th) {fth = th;}
 
 	private:
 
