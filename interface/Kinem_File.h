@@ -7,26 +7,23 @@
 
 class Kinem_File:public TObject
 {
- public:
-  Kinem_File();
+	public:
+		Kinem_File();
 
-  virtual ~Kinem_File();
+		virtual ~Kinem_File();
 
-  UInt_t Molteplicita(Int_t type);
-  Double_t Pseudorapidita() const;
-  Double_t GenTheta() const;
-  Double_t GenPhi() const;
-  Double_t GetTeta(const Double_t& eta) const;
-  
+		UInt_t Molteplicita(Int_t type);
+		Double_t Pseudorapidita() const;
+		Double_t GenTheta() const;
+		Double_t GenPhi() const;
 
- private:
+	private:
 	
-	TFile* sourceFile;
-    TH1F *dishmul;
-	TH1F *disteta;
+		TFile* sourceFile;
+  	TH1F *dishmul;
+		TH1F *disteta;
 
-
-  ClassDef(Kinem_File,1);
+		ClassDef(Kinem_File,1);
 };
 
 #endif

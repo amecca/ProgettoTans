@@ -11,7 +11,7 @@ Intersezione::Intersezione(): TObject(),
 {
 }
 
-Punto Intersezione::SetPoint(Double_t LUNG_BEAM,Punto pStart, Double_t R,Direzione direz){
+Punto Intersezione::TrovaIntersezione(Double_t LUNG_BEAM,Punto pStart, Double_t R,Direzione direz){
 
   HitTrovato = false;
 

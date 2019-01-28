@@ -21,6 +21,7 @@
 
 #include "Vertice.h"
 #include "Trackelet.h"
+#include "Utils.h"
 //#include "Read_dat_simulation.cxx"
 
 using std::cout;
@@ -33,8 +34,8 @@ TFile* findAndOpenFile(const TString& filename);
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
 Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza);
 
-void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName = "VT"){
-
+void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 0){
+	TString treeName = "VT";
 	//CANVAS
 	gStyle->SetOptStat(111111);
 	//Risoluzione onnicomprensiva 
@@ -88,7 +89,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	
 	
 	//Open file and tree
-	TFile* sourceFile = findAndOpenFile(fileName);
+	TFile* sourceFile = Utils::findAndOpenFile(fileName);
 	if (!sourceFile) return;
 	
 	TTree* tree = (TTree*)(sourceFile->Get(treeName.Data()));
@@ -109,12 +110,12 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", TString treeName 
 	
 	TStopwatch stopwatch;
 	//Main loop over entries
-	long nEntries = tree->GetEntries();
-	cout<<"Processing "<<nEntries<<" entries: ";
+	size_t nEntries = tree->GetEntries();
+	size_t toProcess = (nevents == 0 ? nEntries : min(nEntries, nevents));
+	cout<<"Processing "<<toProcess<<" entries: ";
 	UInt_t nonRicostruiti = 0;
-	const bool tutti = true;
 	
-	for(long e = 0; e < (tutti ? nEntries : 20000); e++){
+	for(size_t e = 0; e < toProcess; e++){
 
 		if(tree->GetEntry(e) <= 0) continue;
 		cout<<"\r\t\t\t\t"<<e+1;
@@ -301,6 +302,7 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 	return zRicostruitoMean;
 }
 
+/*
 TFile* findAndOpenFile(const TString& fileName){
 	TFile* sourceFile;
 	if (!gSystem->AccessPathName("Trees/"+fileName+".root",kFileExists))
@@ -320,4 +322,4 @@ TFile* findAndOpenFile(const TString& fileName){
 	} else cout<<"Opened \""<<fileName<<"\"\n";
 	
 	return sourceFile;
-}
+}*/

@@ -31,10 +31,7 @@ Double_t Kinem_File::GenPhi() const{
   return 2*TMath::Pi()*(gRandom->Rndm());
 }
 //___________________________________________________________
-Double_t Kinem_File::GetTeta(const Double_t& eta) const{
-  return 2*TMath::ATan(TMath::Exp(-eta));
-}
-//_________________________________________________________
+
 UInt_t Kinem_File::Molteplicita(Int_t type){
 	if(type==0) 
 		return (UInt_t) dishmul->GetRandom();

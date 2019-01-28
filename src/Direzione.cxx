@@ -7,7 +7,6 @@
 ClassImp(Direzione)
 
 Direzione::Direzione(): TObject()
- 
 {
 }
 
@@ -27,7 +26,4 @@ Direzione::Direzione(const Kinem_File * const kinem){
 }
 
 
-
-
-
- Direzione::~Direzione(){}
+Direzione::~Direzione(){}

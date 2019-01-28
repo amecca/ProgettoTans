@@ -16,7 +16,7 @@ Bool_t HitTrovato;
 virtual ~Intersezione();
 
  //void SetPoint(Double_t LUNG_BEAM,Double_t X0,Double_t Y0, Double_t Z0, Double_t R, Direzione direz,Double_t thp,Double_t php);
-Punto SetPoint(Double_t LUNG_BEAM,Punto pStart, Double_t R, Direzione direz);
+Punto TrovaIntersezione(Double_t LUNG_BEAM,Punto pStart, Double_t R, Direzione direz);
 Direzione Multiple_Scattering(const Direzione& direzStart, const Double_t& rms_theta);
 Hit Rumore(Double_t LUNG_BEAM, Int_t label = -1);
 

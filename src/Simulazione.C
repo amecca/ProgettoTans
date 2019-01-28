@@ -95,12 +95,12 @@ void Simulazione(TString filename = nullTString){
 
 				//BEAM PIPE
 				//Raggio[] è costruito in Read_dat_simulation
-				Punto pHitBeam = p_int.SetPoint(lung_beam,pt,Raggio[0],direz);
+				Punto pHitBeam = p_int.TrovaIntersezione(lung_beam,pt,Raggio[0],direz);
 				if (bool_scat==1) 
 					direz = p_int.Multiple_Scattering(direz,beam_rms); //Estrae i random all'interno
 			
 				//1° RIVELATORE
-				Punto pHitL1 = p_int.SetPoint(lung_beam,pHitBeam,Raggio[1],direz);
+				Punto pHitL1 = p_int.TrovaIntersezione(lung_beam,pHitBeam,Raggio[1],direz);
 				if (bool_scat==1) direz = p_int.Multiple_Scattering(direz,l1_rms);
 		     
 				z1_smeared = gRandom->Gaus(pHitL1.GetZ(), smear_z); 
@@ -117,7 +117,7 @@ void Simulazione(TString filename = nullTString){
 					Successi1++; // crea un l1_hit per ogni evento e ci assegna z phi e label, successi1 sono nel beam pipe
 
 					//2° RIVELATORE
-					Punto pHitL2 = p_int.SetPoint(lung_beam,pHitL1,Raggio[2],direz);
+					Punto pHitL2 = p_int.TrovaIntersezione(lung_beam,pHitL1,Raggio[2],direz);
 
 					z2_smeared = gRandom->Gaus(pHitL2.GetZ(), smear_z);
 					phi2_smeared = gRandom->Gaus(pHitL2.GetPhi(), smear_phi2);
