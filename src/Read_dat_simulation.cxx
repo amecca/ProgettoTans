@@ -32,15 +32,16 @@ static Float_t l1_rms;
 //static Int_t total_reco;
 static Float_t rms_z;
 static Float_t rms_xy;
-//static Int_t EstraiVert;
+static Int_t vertTipo; // vertTipo=1 fz->gauss, vertTipo=0 fz->scelta 
 
-void  Read_dat_simulation(const char * filen){
+bool  Read_dat_simulation(const char * filen){
 	
 	cout<<"Opening \""<<filen<<"\"...\n";
 	
 	FILE * ff = fopen(filen,"r");// r open file for input operation
 	if (ff == nullptr) {
-		cout << "ATTENTION : NO FILE FOUND" << endl;
+		cout << "ATTENTION : NO \""<<filen<<"\" FOUND\n";
+		return false;
 	}
 	// analysis type
 	int rt;
@@ -68,6 +69,7 @@ void  Read_dat_simulation(const char * filen){
 	rt=fscanf(ff,"scattering on/off: %i\n",&bool_scat);
 	rt=fscanf(ff,"contatore rumore: %i\n",&count_noise);
 	rt=fscanf(ff,"tipo di molteplicita: %i\n",&moltTipo);
+	rt=fscanf(ff,"tipo di distribuzione z: %i\n",&vertTipo);
 	//rt=fscanf(ff,"total recostruction: %d\n",&total_reco);
 	//  rt=fscanf(ff,"estrai vertice: %d\n",&EstraiVert);
 
@@ -84,7 +86,6 @@ void  Read_dat_simulation(const char * filen){
 	//  l1_rms = TMath::Sqrt(2)*13.6/800*TMath::Sqrt(thick[1]/lung_rad[1])*(1+0.038*TMath::Log(thick[1]/lung_rad[1]));
 	/*
 	delete ff;*/
-	//return;
-
+	return true;
 }
 
