@@ -76,8 +76,8 @@ bool  Read_dat_simulation(const char * filen){
 	beam_rms = 13.6/800*TMath::Sqrt(thick[0]/lung_rad[0])*(1+0.038*TMath::Log(thick[0]/lung_rad[0]));
 	l1_rms = 13.6/800*TMath::Sqrt(thick[1]/lung_rad[1])*(1+0.038*TMath::Log(thick[1]/lung_rad[1]));
 	
-	cout<<"smear_z = "<<smear_z;
-	cout<<"\nsmear_rphi = "<<smear_rphi;
+	//cout<<"smear_z = "<<smear_z;
+	//cout<<"\nsmear_rphi = "<<smear_rphi;
 	cout<<"\nbool_scat = "<<bool_scat;
 	cout<<"\ncount_noise = "<<count_noise;
 	cout<<"\nmoltTipo = "<<moltTipo<<'\n';

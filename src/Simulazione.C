@@ -36,7 +36,7 @@ void Simulazione(TString filename = nullTString){
 	// apertura file di output
 	TString trueName;
 	if(filename.Length()==0)
-		trueName = TString("vertFile.root");
+		trueName = TString("simulazione.root");
 	else
 		trueName = filename.Append(".root");
 			

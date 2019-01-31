@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <vector>
+#include <sys/stat.h>
 
 #include "TSystem.h"
 
@@ -14,7 +15,12 @@ using std::vector;
 
 
 void compile_simulation(bool run = false, bool debug = false){
-		
+	
+	if(gSystem->AccessPathName("Trees")) //"Bizarre convention": returns false if path exists
+		gSystem->MakeDirectory("Trees");//mkdir("Trees",S_IRWXU);
+	if(gSystem->AccessPathName("Graphs"))
+		gSystem->MakeDirectory("Graphs");//mkdir("Graphs",S_IRWXU);
+	
 	vector<string> macroNames = {
 		"Punto.cxx",
 		"Hit.cxx",

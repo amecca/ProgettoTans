@@ -24,6 +24,9 @@
 #include "Utils.h"
 //#include "Read_dat_simulation.cxx"
 
+//#define MAX_PHI_ANALYSIS
+//#define RANGE_ANALYSIS
+
 using std::cout;
 
 //const Double_t tolleranza = 2.5; //cm; range intorno alla moda in cui i vertici ricostruiti vengono mediati
@@ -33,7 +36,7 @@ const Double_t deltaPhiMin = 0.005;//0.05;ris->0.029
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
 Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza, bool debug = false);
 
-void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 0){
+void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	TString treeName = "VT";
 	//CANVAS
 	gStyle->SetOptStat(111111);
@@ -74,6 +77,12 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	TH1I* hTotaliVsMolt = new TH1I("hTotaliVsMolt", "Totali;Molteplicita';# eventi", 10,0,50);
 	TH1I* hRicostruitiVsMolt = new TH1I("hRicostruitiVsMolt", "Ricostruiti;Molteplicita';# eventi", 10,0,50);
 	
+	//Efficienza "vera" (z vicino al vertice vero) al variare della molteplicità
+	TCanvas* cTrueEffVsMolt = new TCanvas("cTrueEffVsMolt", "cTrueEffVsMolt", 10,10,1200,800);
+	TGraphAsymmErrors* hTrueEffVsMolt;
+	TH1I* hTrueTotVsMolt = new TH1I("hTrueTotVsMolt", "hTrueTotVsMolt", 10,0,50); //conta solo eventi che hanno hit su L2 non di rumore
+	TH1I* hTrueRecVsMolt = new TH1I("hTrueRecVsMolt", "hTrueRecVsMolt", 10,0,50);
+	
 	//Efficienza/Molteplicità per eventi ricostruiti entro 1 sigma (rms z)
 	TCanvas* cEfficienzaVsMolt1sigma = new TCanvas("cEfficienzaVsMolt1sigma","Efficienza (entro 1 sigma)",10,10,1200,800);
 	TGraphAsymmErrors* hEfficienzaVsMolt1sigma;
@@ -86,6 +95,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	TH1I* hTotaliVsZ = new TH1I("hTotaliVsZ", "Totali;Z_{true} [cm];# eventi", 13,-19.5,19.5);
 	TH1I* hRicostruitiVsZ = new TH1I("hRicostruitiVsZ", "Ricostruiti;Z_{true} [cm];# eventi", 13,-19.5,19.5);
 	
+	#ifdef MAX_PHI_ANALYSIS
 	//Risoluzione al variare di maxPhi (nella ricostruzione delle tracce)
 	Double_t stdDevPhi[8];
 	Double_t sStdDevPhi[8];
@@ -104,6 +114,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	TGraphAsymmErrors* hEfficienzaVsPhi;
 	TH1I* hTotPhi = new TH1I("hTotPhi","hTotPhi", 101,0.,0.0101);
 	TH1I* hEffPhi = new TH1I("hEffPhi","hEffPhi", 101,0.,0.0101);
+	#endif //MAX_PHI_ANALYSIS
 	
 	//Open file and tree
 	TFile* sourceFile = Utils::findAndOpenFile(fileName);
@@ -138,6 +149,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 		cout<<"\r\t\t\t\t"<<e+1;
 
 		hTotaliVsMolt->Fill(vtx.m);
+		if(L2Hits->GetEntries() > 10) hTrueTotVsMolt->Fill(vtx.m);
 		if(fabs(vtx.z0) < 5.3 /*rms_z*/) hTotaliVsMolt1sigma->Fill(vtx.m);
 		hTotaliVsZ->Fill(vtx.z0);
 		
@@ -150,6 +162,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 		else{
 			Double_t deltaZ = zRicostruito - vtx.z0;
 			hRisoluzioneAll->Fill(deltaZ);
+			if(fabs(deltaZ) < 0.1) hTrueRecVsMolt->Fill(vtx.m); //efficienza
 			
 			for(size_t i=0; i<xZ.size(); i++){
 				if(fabs(vtx.z0 - xZ[i]) < 1.5){
@@ -163,11 +176,14 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 					break;
 				}
 			}
+			//Efficienza
 			hRicostruitiVsMolt->Fill(vtx.m);
+			//Risoluzione
 			if(fabs(vtx.z0) < 5.3/*rms_z*/) hRicostruitiVsMolt1sigma->Fill(vtx.m);
 			hRicostruitiVsZ->Fill(vtx.z0);
 		}
 		
+		#ifdef MAX_PHI_ANALYSIS
 		//Risoluzione al variare della phiMax
 		for(size_t i = 0; i < xPhi.size(); i++){
 			hTotPhi->Fill(xPhi[i]);
@@ -179,8 +195,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 				hEffPhi->Fill(xPhi[i]);
 			}
 		}
-		
-		//hZetaV->Fill(vtx.z0,1);
+		#endif
 		
 		L1Hits->Clear("C");
 		L1Hits->Clear("C");
@@ -218,6 +233,12 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	hEfficienzaVsMolt->SetMinimum(0.);
 	hEfficienzaVsMolt->Draw();
 	
+	cTrueEffVsMolt->cd();
+	hTrueEffVsMolt = new TGraphAsymmErrors(hTrueRecVsMolt, hTrueTotVsMolt/*hTotaliVsMolt*/);
+	hTrueEffVsMolt->SetTitle("Ricostruiti entro 0.1 cm;Molteplicita';Efficienza");
+	hTrueEffVsMolt->SetMinimum(0.);
+	hTrueEffVsMolt->Draw();
+	
 	cEfficienzaVsMolt1sigma->cd();
 	hEfficienzaVsMolt1sigma = new TGraphAsymmErrors(hRicostruitiVsMolt1sigma, hTotaliVsMolt1sigma);
 	hEfficienzaVsMolt1sigma->SetTitle("Efficienza (vertice entro 1#sigma);Molteplicita';Ricostruiti/Totali");
@@ -230,6 +251,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	hEfficienzaVsZ->SetMinimum(0.);
 	hEfficienzaVsZ->Draw();
 	
+	#ifdef MAX_PHI_ANALYSIS
 	//Risoluzione al variare di phiMax
 	for(size_t i = 0; i < xPhi.size(); i++){
 		stdDevPhi[i] = hRisoluzionePhis[i]->GetStdDev();
@@ -246,6 +268,7 @@ void Ricostruzione(TString fileName = "vertFile0_noscat.root", size_t nevents = 
 	hEfficienzaVsPhi->SetMinimum(0.);
 	hEfficienzaVsPhi->SetTitle("Efficienza Vs #phi max; #phi max [rad]");
 	hEfficienzaVsPhi->Draw();
+	#endif
 	
 	sourceFile->Close();
 	//cout<<"\nNon Ricostruiti: "<<nonRicostruiti<<"\n";
