@@ -4,6 +4,7 @@
 typedef struct{
 	Double_t x0,y0,z0;
 	Int_t m;
+	Int_t noise;
 }VERTICE;
 
 #endif

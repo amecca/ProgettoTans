@@ -15,8 +15,6 @@ Kinem_File::Kinem_File(): TObject()
 	dishmul = (TH1F*)sourceFile->Get("hmul");
 	disteta = (TH1F*)sourceFile->Get("heta"); //distribuzione in pseudorapidità
 }
-// 01/01/19
-//generazione della pseudorapidità e della molteplicità 
 
 //__________________________________________________________
 Double_t Kinem_File::Pseudorapidita() const{

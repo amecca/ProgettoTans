@@ -1,5 +1,12 @@
+//-------------------------------------------------------
+// Raccolta di funzioni utili che vengono chiamate da
+// più classi e/o macro, opportunamente raccolte nel
+// namespace Utils::
+//-------------------------------------------------------
 #ifndef UTILS_H
 #define UTILS_H
+
+#include "Punto.h"
 
 #include <vector>
 
@@ -11,7 +18,20 @@
 namespace Utils{
 
 	Double_t ThetaFromEta(const Double_t& eta){
-  	return 2*TMath::ATan(TMath::Exp(-eta));
+  	return 2.*TMath::ATan(TMath::Exp(-eta));
+	}
+	
+	Double_t EtaFromTheta(const Double_t& theta){
+  	return -TMath::Log(TMath::Tan(theta/2.));
+	}
+	
+	Double_t GetTheta(const Punto& p){
+		Double_t r = TMath::Sqrt(p.GetX()*p.GetX() + p.GetY()*p.GetY());
+		return TMath::ATan2(p.GetZ(), r);
+	}
+	
+	Double_t GetPhi(const Punto& p){
+		return TMath::ATan2(p.GetY(), p.GetX());
 	}
 	
 	TString searchDirs[] = {TString("Trees"),TString("Data")};

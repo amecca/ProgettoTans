@@ -1,3 +1,8 @@
+//-------------------------------------------------------
+// Interfaccia col file kinem.root, in cui sono presenti 
+// grafici contenenti le distribuzioni desiderate di molteplicità
+// del vertice e pseudorapidità iniziale per le particelle
+//-------------------------------------------------------
 #ifndef KINEM_FILE_H
 #define KINEM_FILE_H
 

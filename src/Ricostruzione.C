@@ -22,7 +22,7 @@
 #include "Vertice.h"
 #include "Trackelet.h"
 #include "Utils.h"
-//#include "Read_dat_simulation.cxx"
+#include "Read_dat_simulation.h"
 
 //#define MAX_PHI_ANALYSIS
 //#define RANGE_ANALYSIS
@@ -37,7 +37,10 @@ Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t
 Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza, bool debug = false);
 
 void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
-	TString treeName = "VT";
+	
+	if(!Read_dat_simulation("Data/Dati_Simulazione.dat", false))
+		SimulationData::count_noise = 10; //default value if it couldn't read the data file
+	
 	//CANVAS
 	gStyle->SetOptStat(111111);
 	//Risoluzione onnicomprensiva 
@@ -120,6 +123,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	TFile* sourceFile = Utils::findAndOpenFile(fileName);
 	if (!sourceFile) return;
 	
+	TString treeName = "VT";
 	TTree* tree = (TTree*)(sourceFile->Get(treeName.Data()));
 	if(!tree){
 		cout<<"\n\""<<treeName<<"\" not found in \""<<fileName<<"\"\n";
@@ -149,7 +153,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 		cout<<"\r\t\t\t\t"<<e+1;
 
 		hTotaliVsMolt->Fill(vtx.m);
-		if(L2Hits->GetEntries() > 10) hTrueTotVsMolt->Fill(vtx.m);
+		if(L2Hits->GetEntries() > SimulationData::count_noise) hTrueTotVsMolt->Fill(vtx.m);
 		if(fabs(vtx.z0) < 5.3 /*rms_z*/) hTotaliVsMolt1sigma->Fill(vtx.m);
 		hTotaliVsZ->Fill(vtx.z0);
 		

@@ -15,7 +15,9 @@
 #include "Kinem_File.h"
 #include "Hit.h"
 #include "Intersezione.h"
-#include "Read_dat_simulation.cxx"
+#include "Read_dat_simulation.h"
+
+//using namespace SimulationData;
 
 TString nullTString = TString();
 void Simulazione(TString filename = nullTString){
@@ -24,11 +26,11 @@ void Simulazione(TString filename = nullTString){
 
 	cout<<"Start simulation..."<<endl;
 
-	if(!Read_dat_simulation("Data/Dati_Simulazione.dat"))// legge i dati e li assegna alle variabili
+	if(!Read_dat_simulation("Data/Dati_Simulazione.dat", true))// legge i dati e li assegna alle variabili
 		return; //Se non trova il file non c'è niente da fare
 	Double_t z1_smeared,phi1_smeared,z2_smeared,phi2_smeared; // smearing 
-	Double_t smear_phi1 = smear_rphi/Raggio[1]; //smearing su phi normalizzato al raggio
-	Double_t smear_phi2 = smear_rphi/Raggio[2];
+	Double_t smear_phi1 = SimulationData::smear_rphi/SimulationData::Raggio[1]; //smearing su phi normalizzato al raggio
+	Double_t smear_phi2 = SimulationData::smear_rphi/SimulationData::Raggio[2];
 	Int_t mult, Label, Successi1, Successi2;
 
 	TStopwatch stopwatch; 
@@ -39,11 +41,6 @@ void Simulazione(TString filename = nullTString){
 		trueName = TString("simulazione.root");
 	else
 		trueName = filename.Append(".root");
-			
-	/*cout<<"filename.Length() = "<<filename.Length()<<std::endl;
-		cout<<"filename = "<<filename;
-		cout<<"\ntrueName = "<<trueName<<std::endl;
-		exit(0);*/
 		
 	if(!gSystem->AccessPathName("Trees",kFileExists))
 		gSystem->MakeDirectory("Trees");
@@ -70,18 +67,19 @@ void Simulazione(TString filename = nullTString){
 	Intersezione p_int; //Usata per trovare il punto di intersezione
 	Kinem_File kinem; //Interfaccia col file contenente le distribuzioni di molteplicità e pseudorapidità
 	mult=0;
-
-
-	for(Int_t i=0;i<nevent;i++){
+	
+	//____________________________________________________________________________________
+	//LOOP ON EVENTS
+	for(Int_t i = 0; i < SimulationData::nevent; i++){
 		//genera il vertice con la distribuzione assegnata: vertTipo=1 fz->gauss, vertTipo=0 fz->scelta 
-		pt.Generate(rms_xy,rms_z,vertTipo); 
+		pt.Generate(SimulationData::rms_xy, SimulationData::rms_z, SimulationData::vertTipo); 
 
 		vtx.x0=pt.GetX(); // coordinate vertice la struct VERTICE serve per scrivere sul tree 
 		vtx.y0=pt.GetY(); 
 		vtx.z0=pt.GetZ();
 
 		//Usa la distribuzione scelta in Dati_simulazione.txt
-		mult = kinem.Molteplicita(moltTipo); //0 -> distribuzione salvata in KinemFile.root; 1 -> uniforme fra 0 e 50
+		mult = kinem.Molteplicita(SimulationData::moltTipo); //0 -> distribuzione salvata in KinemFile.root; 1 -> uniforme fra 0 e 50
 		vtx.m = mult;
 
 		Label = 1; //etichetta assegnata alla particella a fini di debug
@@ -94,16 +92,17 @@ void Simulazione(TString filename = nullTString){
 			Direzione direz(&kinem); // direz aggiornata della prticella
 
 			//BEAM PIPE
-			//Raggio[] è costruito in Read_dat_simulation
-			Punto pHitBeam = p_int.TrovaIntersezione(lung_beam,pt,Raggio[0],direz);
-			if (bool_scat==1) 
-				direz = p_int.Multiple_Scattering(direz,beam_rms); //Estrae i random all'interno
+			Punto pHitBeam = p_int.TrovaIntersezione(SimulationData::lung_beam, pt, SimulationData::Raggio[0] ,direz);
+			if (SimulationData::bool_scat==1) 
+				direz = p_int.Multiple_Scattering(direz, SimulationData::beam_rms); //Estrae i random all'interno
 		
 			//1° RIVELATORE
-			Punto pHitL1 = p_int.TrovaIntersezione(lung_beam,pHitBeam,Raggio[1],direz);
-			if (bool_scat==1) direz = p_int.Multiple_Scattering(direz,l1_rms);
+			Punto pHitL1 = p_int.TrovaIntersezione(SimulationData::lung_beam, pHitBeam,  SimulationData::Raggio[1], direz);
+			bool hitValido1 = p_int.isValid();
+			
+			if (SimulationData::bool_scat==1) direz = p_int.Multiple_Scattering(direz, SimulationData::l1_rms);
 		   
-			z1_smeared = gRandom->Gaus(pHitL1.GetZ(), smear_z); 
+			z1_smeared = gRandom->Gaus(pHitL1.GetZ(), SimulationData::smear_z); 
 			phi1_smeared = gRandom->Gaus(pHitL1.GetPhi(), smear_phi1); // smearing 120 e 30 micron
 
 			if (phi1_smeared<0) 
@@ -112,14 +111,16 @@ void Simulazione(TString filename = nullTString){
 				phi1_smeared = phi1_smeared - 2*TMath::Pi();
 			// lo smearing gauss è compreso tra 0 e 2Pi
 
-			if(z1_smeared>=-lung_beam/2&&z1_smeared<=lung_beam/2){
+			//if(z1_smeared>=-SimulationData::lung_beam/2&&z1_smeared<=SimulationData::lung_beam/2){
+			if(hitValido1){
 				new(l1_hit[Successi1])Hit(z1_smeared, phi1_smeared, Label);
-				Successi1++; // crea un l1_hit per ogni evento e ci assegna z phi e label, successi1 sono nel beam pipe
+				Successi1++; // crea un l1_hit per ogni evento e gli assegna z phi e label, successi1 sono nel beam pipe
 
-				//2° RIVELATORE
-				Punto pHitL2 = p_int.TrovaIntersezione(lung_beam,pHitL1,Raggio[2],direz);
-
-				z2_smeared = gRandom->Gaus(pHitL2.GetZ(), smear_z);
+				//2° RIVELATORE (solo se il primo è stato colpito)
+				Punto pHitL2 = p_int.TrovaIntersezione(SimulationData::lung_beam, pHitL1, SimulationData::Raggio[2], direz);
+				bool hitValido2 = p_int.isValid();
+				
+				z2_smeared = gRandom->Gaus(pHitL2.GetZ(), SimulationData::smear_z);
 				phi2_smeared = gRandom->Gaus(pHitL2.GetPhi(), smear_phi2);
 
 				if (phi2_smeared<0)
@@ -127,7 +128,8 @@ void Simulazione(TString filename = nullTString){
 				else if (phi2_smeared>2*TMath::Pi()) 
 						phi2_smeared = phi2_smeared - 2*TMath::Pi();
 				        
-				if(z2_smeared>=-lung_beam/2 && z2_smeared<=lung_beam/2){
+				//if(z2_smeared>=-SimulationData::lung_beam/2 && z2_smeared<=SimulationData::lung_beam/2){
+				if(hitValido2){
 					new(l2_hit[Successi2])Hit(z2_smeared, phi2_smeared, Label); // l1 e l2 condividono il label
 					Successi2++;
 				}
@@ -139,24 +141,24 @@ void Simulazione(TString filename = nullTString){
 		Label = -1;
 		// 1° Rivelatore
 
-		for (Int_t k=Successi1; k<Successi1+count_noise; k++){//loop sul rumore
-			Hit temp = p_int.Rumore(lung_beam,Label);
+		for (Int_t k=Successi1; k<Successi1+SimulationData::count_noise; k++){//loop sul rumore
+			Hit temp = p_int.Rumore(SimulationData::lung_beam,Label);
 			//cout<<"\nNoise "<<j-Successi1;
 			new(l1_hit[k])Hit(temp.GetZ(),temp.GetPHI(),Label);
 		}
 
 		//2° Rivelatore
-		for (Int_t k=Successi2; k<Successi2+count_noise; k++){//loop sul rumore
-			Hit temp = p_int.Rumore(lung_beam,Label);
+		for (Int_t k=Successi2; k<Successi2+SimulationData::count_noise; k++){//loop sul rumore
+			Hit temp = p_int.Rumore(SimulationData::lung_beam,Label);
 			new(l2_hit[k])Hit(temp.GetZ(),temp.GetPHI(),Label);
 		}
 
 
 		vertTree->Fill();
-		l1hit->Clear(); // controllare TClonesArrey
+		l1hit->Clear();
 		l2hit->Clear();
-		if(i%((nevent)/100))
-			cout<<"\rFilling simulation tree: "<<i*100/(nevent)+1<<"%";
+		if(i%((SimulationData::nevent)/100))
+			cout<<"\rFilling simulation tree: "<<i*100/(SimulationData::nevent)+1<<"%";
 	} //close loop on events
 		
 	cout<<"\nElapsed time: "<<stopwatch.CpuTime()<<" s";

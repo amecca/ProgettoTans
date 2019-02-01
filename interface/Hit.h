@@ -1,3 +1,9 @@
+//-------------------------------------------------------
+// Rappresentazione di una coppia (z,phi) corrispondente
+// ad una posizione su un generico layer, cui viene aggiunta 
+// un'etichetta che identifica la particella che l'ha generata
+// Ha funzioni base per la distanza in phi fra due Hit 
+//-------------------------------------------------------
 #ifndef HIT_H
 #define HIT_H
 
@@ -26,7 +32,7 @@ class Hit : public TObject
 		Double_t fPhi;	//Guaranteed to be between 0 and 2pi
 		Int_t label;
 
-	ClassDef(Hit,1)
+		ClassDef(Hit,1)
 };
 
 

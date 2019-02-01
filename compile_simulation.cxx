@@ -28,7 +28,7 @@ void compile_simulation(bool run = false, bool debug = false){
 		"Direzione.cxx",
 		"Intersezione.cxx",
 		"Trackelet.cxx",
-		//"Read_dat_simulation.cxx",
+		"Read_dat_simulation.cxx",
 		"Simulazione.C",
 		"Ricostruzione.C"
 	};

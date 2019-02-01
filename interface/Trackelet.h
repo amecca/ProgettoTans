@@ -1,3 +1,7 @@
+//-------------------------------------------------------
+// Classe che ricostruisce la posizione lungo l'asse z del
+// vertice, date due Hit. 
+//-------------------------------------------------------
 #ifndef TRACKELET_H
 #define TRACKELET_H
 
@@ -11,6 +15,7 @@ class Trackelet : public TObject{
 		Trackelet(const Hit& hitL1, const Hit& hitL2);
 		Trackelet(const Hit* const phitL1, const Hit* const phitL2);
 		Double_t findZVertex() const;
+		bool isAcceptable(const Double_t& maxPhi) const;
 	private:
 		Hit fHitL1;
 		Hit fHitL2;

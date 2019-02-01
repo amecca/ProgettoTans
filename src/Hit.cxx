@@ -35,9 +35,10 @@ Double_t Hit::deltaPhi(const Hit& hit1, const Hit& hit2){
 Double_t Hit::deltaPhi(const Hit* hit1, const Hit* hit2){
 	Double_t phi1 = hit1->GetPHI();
 	Double_t phi2 = hit2->GetPHI();
+	Double_t PI = TMath::Pi();
 	
 	double result = phi1 - phi2;
-    while (result > TMath::Pi()) result -= 2*M_PI;
-    while (result <= -TMath::Pi()) result += 2*M_PI;
-    return fabs(result);
+  while (result > PI) result -= 2*PI;
+  while (result <= -PI) result += 2*PI;
+  return fabs(result);
 }

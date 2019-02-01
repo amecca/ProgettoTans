@@ -1,3 +1,9 @@
+//-------------------------------------------------------
+// Rappresentazione di una direzione come coppia (theta,phi)
+// Usata per propagare le particelle nel rivelatore
+// Contiene la generazione casuale di theta e phi attraverso 
+// Kinem_File
+//-------------------------------------------------------
 #ifndef DIREZIONE_H
 #define DIREZIONE_H
 
@@ -13,8 +19,6 @@ class Direzione: public TObject
 		Direzione(const Kinem_File * const); 
 
 		virtual ~Direzione();
-
-		//void CalcolaA(); // calcB e calcC
 
 		Double_t GetPHI() const {return fph;}
 		Double_t GetTHETA() const {return fth;}

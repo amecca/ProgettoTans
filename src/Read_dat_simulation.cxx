@@ -8,33 +8,17 @@
 #include <vector>
 #include "TMath.h"
 
+#include "Read_dat_simulation.h"
 // 
 //
 // Questa macro legge i dati dal file .dat e li assegna alle variabili
 //
 //
 
-using namespace std;
-static bool debug = true;
-static Int_t moltTipo;
-static Int_t nevent;
-static Float_t lung_beam;
-static Float_t Raggio[3];
-static Int_t Z[2];
-static Float_t thick[2];
-static Float_t lung_rad[2];
-static Int_t bool_scat;
-static Int_t count_noise;
-static Float_t smear_z;
-static Float_t smear_rphi;
-static Float_t beam_rms;
-static Float_t l1_rms;
-//static Int_t total_reco;
-static Float_t rms_z;
-static Float_t rms_xy;
-static Int_t vertTipo; // vertTipo=1 fz->gauss, vertTipo=0 fz->scelta 
+using std::cout;
+using namespace SimulationData;
 
-bool  Read_dat_simulation(const char * filen){
+bool Read_dat_simulation(const char * filen, bool debug){
 	
 	cout<<"Opening \""<<filen<<"\"...\n";
 	
@@ -76,11 +60,12 @@ bool  Read_dat_simulation(const char * filen){
 	beam_rms = 13.6/800*TMath::Sqrt(thick[0]/lung_rad[0])*(1+0.038*TMath::Log(thick[0]/lung_rad[0]));
 	l1_rms = 13.6/800*TMath::Sqrt(thick[1]/lung_rad[1])*(1+0.038*TMath::Log(thick[1]/lung_rad[1]));
 	
-	//cout<<"smear_z = "<<smear_z;
-	//cout<<"\nsmear_rphi = "<<smear_rphi;
-	cout<<"\nbool_scat = "<<bool_scat;
-	cout<<"\ncount_noise = "<<count_noise;
-	cout<<"\nmoltTipo = "<<moltTipo<<'\n';
+	if(debug){
+		cout<<"nevent "<<nevent;
+		cout<<"\nbool_scat = "<<bool_scat;
+		cout<<"\ncount_noise = "<<count_noise;
+		cout<<"\nmoltTipo = "<<moltTipo<<'\n';
+	}
 
 	//  beam_rms = TMath::Sqrt(2)*13.6/800*TMath::Sqrt(thick[0]/lung_rad[0])*(1+0.038*TMath::Log(thick[0]/lung_rad[0]));
 	//  l1_rms = TMath::Sqrt(2)*13.6/800*TMath::Sqrt(thick[1]/lung_rad[1])*(1+0.038*TMath::Log(thick[1]/lung_rad[1]));

@@ -22,3 +22,7 @@ Double_t Trackelet::findZVertex() const{
 	Double_t b = LAYER2_RADIUS - a*fHitL2.GetZ(); //b = r2 - a*z2
 	return -b/a; //r==0 --> z = -b/a
 };
+
+bool Trackelet::isAcceptable(const Double_t& maxPhi) const{
+	return (Hit::deltaPhi(fHitL1,fHitL2) < maxPhi);
+}
