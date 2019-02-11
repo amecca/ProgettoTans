@@ -42,7 +42,7 @@ SimulationData DataReader::Read_dat_simulation(const char * filen, bool debug){
 	}
 	// analysis type
 	int rt;
-	rt=fscanf(ff,"nevent: %d\n",&data.nevent); //formatto le variabili in base al loro utilizzo
+	rt=fscanf(ff,"nevent: %u\n",&data.nevent); //formatto le variabili in base al loro utilizzo
 	
 	rt=fscanf(ff,"lung_beam: %f\n",&data.lung_beam);
 
@@ -64,7 +64,8 @@ SimulationData DataReader::Read_dat_simulation(const char * filen, bool debug){
 	rt=fscanf(ff,"smearing on z: %f\n",&data.smear_z);
 	rt=fscanf(ff,"smearing on rphi: %f\n",&data.smear_rphi);
 	rt=fscanf(ff,"scattering on/off: %i\n",&data.bool_scat);
-	rt=fscanf(ff,"contatore rumore: %i\n",&data.count_noise);
+	rt=fscanf(ff,"tipo di rumore: %i\n",&data.noise_type);
+	rt=fscanf(ff,"contatore rumore: %u\n",&data.count_noise);
 	rt=fscanf(ff,"tipo di molteplicita: %i\n",&data.moltTipo);
 	rt=fscanf(ff,"tipo di distribuzione z: %i\n",&data.vertTipo);
 
@@ -78,9 +79,9 @@ SimulationData DataReader::Read_dat_simulation(const char * filen, bool debug){
 		cout<<"nevent "<<data.nevent;
 		cout<<"\nbool_scat = "<<data.bool_scat;
 		cout<<"\ncount_noise = "<<data.count_noise;
-		cout<<"\nmoltTipo = "<<data.moltTipo<<'\n';
-		cout<<"beam_rms = "<<data.beam_rms*1000<<"\n";
-		cout<<"layer_rms = "<<data.l1_rms*1000<<"\n";
+		cout<<"\nmoltTipo = "<<data.moltTipo;
+		cout<<"\nbeam_rms = "<<data.beam_rms*1000;
+		cout<<"\nlayer_rms = "<<data.l1_rms*1000<<"\n";
 	}
 	
 	fsuccesfulRead = true;

@@ -33,8 +33,9 @@ void Simulazione(TString filename = nullTString){
 		cout<<"\nCould not read the .dat file\n";
 		return; //Se non trova il file non c'è niente da fare
 	}
+	delete dataRead;
 	
-	Double_t z1_smeared,phi1_smeared,z2_smeared,phi2_smeared; // smearing 
+	Double_t z1_smeared,phi1_smeared,z2_smeared,phi2_smeared; // smearing
 	/*
 	Double_t smear_phi1 = simData.smear_rphi/simData.Raggio[1]; //spostati in DataReader
 	Double_t smear_phi2 = simData.smear_rphi/simData.Raggio[2];
@@ -52,10 +53,13 @@ void Simulazione(TString filename = nullTString){
 		
 	if(!gSystem->AccessPathName("Trees",kFileExists))
 		gSystem->MakeDirectory("Trees");
-	TFile vertFile(("Trees/"+trueName).Data(),"RECREATE"); // formats the string 
-		if(vertFile.IsZombie()) return;
+	TFile vertFile(("Trees/"+trueName).Data(),"RECREATE");
+	if(vertFile.IsZombie()){
+		cout<<"Problems creating \"Trees/"<<trueName<<".root\"\n";
+		return;
+	}
     	
-	TTree* vertTree = new TTree("VT","Tree del Hit");
+	TTree* vertTree = new TTree("VT","Tree delle Hit");
 
 	// Array layer
 	TClonesArray *l1hit = new TClonesArray("Hit",400);
@@ -78,7 +82,7 @@ void Simulazione(TString filename = nullTString){
 	
 	//____________________________________________________________________________________
 	//LOOP ON EVENTS
-	for(Int_t i = 0; i < simData.nevent; i++){
+	for(UInt_t i = 0; i < simData.nevent; i++){
 		//genera il vertice con la distribuzione assegnata: vertTipo=1 fz->gauss, vertTipo=0 fz->scelta 
 		pt.Generate(simData.rms_xy, simData.rms_z, simData.vertTipo); 
 
@@ -149,14 +153,14 @@ void Simulazione(TString filename = nullTString){
 		Label = -1;
 		// 1° Rivelatore
 
-		for (Int_t k=Successi1; k<Successi1+simData.count_noise; k++){//loop sul rumore
+		for (UInt_t k=Successi1; k<Successi1+simData.count_noise; k++){//loop sul rumore
 			Hit temp = p_int.Rumore(simData.lung_beam,Label);
 			//cout<<"\nNoise "<<j-Successi1;
 			new(l1_hit[k])Hit(temp.GetZ(),temp.GetPHI(),Label);
 		}
 
 		//2° Rivelatore
-		for (Int_t k=Successi2; k<Successi2+simData.count_noise; k++){//loop sul rumore
+		for (UInt_t k=Successi2; k<Successi2+simData.count_noise; k++){//loop sul rumore
 			Hit temp = p_int.Rumore(simData.lung_beam,Label);
 			new(l2_hit[k])Hit(temp.GetZ(),temp.GetPHI(),Label);
 		}
@@ -170,7 +174,8 @@ void Simulazione(TString filename = nullTString){
 	} //close loop on events
 		
 	cout<<"\nElapsed time: "<<stopwatch.CpuTime()<<" s";
-		
+	
+	vertFile.WriteObject(&simData,"simData");
 	vertFile.Write("", TObject::kOverwrite);
 	cout<<"\nTree filled successfully and saved in \""<<trueName<<"\"\n";
 

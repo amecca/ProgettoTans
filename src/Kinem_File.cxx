@@ -30,7 +30,7 @@ Double_t Kinem_File::GenPhi() const{
 }
 //___________________________________________________________
 
-UInt_t Kinem_File::Molteplicita(Int_t type){
+UInt_t Kinem_File::Molteplicita(Int_t type) const{
 	//cout<<type<<'\n';
 	if(type==0) 
 		return (UInt_t) dishmul->GetRandom();
@@ -43,9 +43,23 @@ UInt_t Kinem_File::Molteplicita(Int_t type){
 	else return 0;
 }
 
+UInt_t Kinem_File::Rumore(Int_t type, UInt_t mean, UInt_t sigma) const{
+	UInt_t noise = 0;
+	switch(type){
+		case 1:
+			noise = gRandom->Gaus(mean, sigma);
+			break;
+		case 2:
+			UInt_t possibili[10] = {0, 1, 2, 5, 8, 12, 16, 20, 25, 30};
+			return possibili[(UInt_t)(gRandom->Rndm() *10)];
+			break;
+	}
+	return noise;
+}
+
 Kinem_File::~Kinem_File(){
 	delete disteta;
 	delete dishmul;
-   sourceFile->Close();
-   delete sourceFile;
+	sourceFile->Close();
+	delete sourceFile;
 }

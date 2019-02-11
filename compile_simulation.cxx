@@ -14,7 +14,7 @@ using std::string;
 using std::vector;
 
 
-void compile_simulation(bool run = false, bool debug = false){
+void compile_simulation(bool debug = false){
 	
 	if(gSystem->AccessPathName("Trees")) //"Bizarre convention": returns false if path exists
 		gSystem->MakeDirectory("Trees");//mkdir("Trees",S_IRWXU);
@@ -42,7 +42,5 @@ void compile_simulation(bool run = false, bool debug = false){
 		if(debug) cout<<"+++ Processing \""<<macroNames.at(i)<<"\" \t+++\n";
 		gSystem->CompileMacro(("src/"+macroNames.at(i)).c_str(),"kg");
 	}
-	if(run)
-		gROOT->ProcessLine("Simulazione()");
 }
 

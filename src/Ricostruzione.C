@@ -38,12 +38,14 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 
 void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	
+	/*
 	DataReader* dataRead = DataReader::getInstance();
 	SimulationData simData = dataRead->Read_dat_simulation("Data/Dati_Simulazione.dat",true);
 	if(!dataRead->fileRead()){
 		cout<<"\nCould not read the .dat file\n";
 		return; //Se non trova il file non c'è niente da fare
 	}
+	delete dataRead;*/
 	
 	//CANVAS
 	gStyle->SetOptStat(111111);
@@ -125,7 +127,11 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	
 	//Open file and tree
 	TFile* sourceFile = Utils::findAndOpenFile(fileName);
-	if (!sourceFile) return;
+	if (!sourceFile) return; //Error message printed by findAndOpenFile();
+	
+	TObject* pSimData = sourceFile->Get("simData");
+	SimulationData simData = *((SimulationData*)pSimData);
+	
 	
 	TString treeName = "VT";
 	TTree* tree = (TTree*)(sourceFile->Get(treeName.Data()));
@@ -157,7 +163,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 		cout<<"\r\t\t\t\t"<<e+1;
 
 		hTotaliVsMolt->Fill(vtx.m);
-		if(L2Hits->GetEntries() > simData.count_noise) hTrueTotVsMolt->Fill(vtx.m);
+		if(L2Hits->GetEntriesFast() > (Int_t)(simData.count_noise)) hTrueTotVsMolt->Fill(vtx.m);
 		if(fabs(vtx.z0) < 5.3 /*rms_z*/) hTotaliVsMolt1sigma->Fill(vtx.m);
 		hTotaliVsZ->Fill(vtx.z0);
 		
@@ -278,6 +284,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	hEfficienzaVsPhi->Draw();
 	#endif
 	
+	//delete pSimData;
 	sourceFile->Close();
 	//cout<<"\nNon Ricostruiti: "<<nonRicostruiti<<"\n";
 	return;
