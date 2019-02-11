@@ -3,10 +3,10 @@
 // che vengono inseriti in variabili definite nel namespace
 // SimulationData::
 //-------------------------------------------------------
-#ifndef READ_DAT_SIMULATION
-#define READ_DAT_SIMULATION
+#ifndef DATA_READER
+#define DATA_READER
 
-namespace SimulationData{
+struct SimulationData{
 	Int_t moltTipo;
 	Int_t nevent;
 	Float_t lung_beam;
@@ -23,8 +23,22 @@ namespace SimulationData{
 	Float_t rms_z;
 	Float_t rms_xy;
 	Int_t vertTipo; // vertTipo=1 fz->gauss, vertTipo=0 fz->scelta 
-}
+	
+	Double_t smear_phi1;
+	Double_t smear_phi2;
+};
 
-bool Read_dat_simulation(const char * filen, bool debug = false); //returns true if the file was found and read
+class DataReader{
+	private:
+		DataReader();
+		static DataReader* fInstance;
+		bool fsuccesfulRead = false;
+		
+	public:
+		static DataReader* getInstance();
+		SimulationData Read_dat_simulation(const char * filen, bool debug = false); //returns true if the file was found and read
+		bool fileRead() const{ return fsuccesfulRead; }
+		
+};
 
 #endif

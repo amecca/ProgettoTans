@@ -22,9 +22,9 @@
 #include "Vertice.h"
 #include "Trackelet.h"
 #include "Utils.h"
-#include "Read_dat_simulation.h"
+#include "DataReader.h"
 
-//#define MAX_PHI_ANALYSIS
+#define MAX_PHI_ANALYSIS
 //#define RANGE_ANALYSIS
 
 using std::cout;
@@ -38,8 +38,12 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 
 void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	
-	if(!Read_dat_simulation("Data/Dati_Simulazione.dat", false))
-		SimulationData::count_noise = 10; //default value if it couldn't read the data file
+	DataReader* dataRead = DataReader::getInstance();
+	SimulationData simData = dataRead->Read_dat_simulation("Data/Dati_Simulazione.dat",true);
+	if(!dataRead->fileRead()){
+		cout<<"\nCould not read the .dat file\n";
+		return; //Se non trova il file non c'è niente da fare
+	}
 	
 	//CANVAS
 	gStyle->SetOptStat(111111);
@@ -153,7 +157,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 		cout<<"\r\t\t\t\t"<<e+1;
 
 		hTotaliVsMolt->Fill(vtx.m);
-		if(L2Hits->GetEntries() > SimulationData::count_noise) hTrueTotVsMolt->Fill(vtx.m);
+		if(L2Hits->GetEntries() > simData.count_noise) hTrueTotVsMolt->Fill(vtx.m);
 		if(fabs(vtx.z0) < 5.3 /*rms_z*/) hTotaliVsMolt1sigma->Fill(vtx.m);
 		hTotaliVsZ->Fill(vtx.z0);
 		
@@ -239,7 +243,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	
 	cTrueEffVsMolt->cd();
 	hTrueEffVsMolt = new TGraphAsymmErrors(hTrueRecVsMolt, hTrueTotVsMolt/*hTotaliVsMolt*/);
-	hTrueEffVsMolt->SetTitle("Ricostruiti entro 0.1 cm;Molteplicita';Efficienza");
+	hTrueEffVsMolt->SetTitle("Efficienza algoritmo (#DeltaZ < 0.1 cm);Molteplicita';Efficienza");
 	hTrueEffVsMolt->SetMinimum(0.);
 	hTrueEffVsMolt->Draw();
 	
@@ -328,7 +332,7 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 	}
 	
 			
-	TH1I hFindModa = TH1I("findModa", "findModa",40,-20,20);
+	TH1I hFindModa = TH1I("findModa", "findModa",160,-20,20);
 	for(size_t j = 0; j < zRicostruiti.size(); j++){
 		hFindModa.Fill(zRicostruiti.at(j));
 	}
