@@ -75,16 +75,19 @@ SimulationData DataReader::Read_dat_simulation(const char * filen, bool debug){
 	data.smear_phi1 = data.smear_rphi/data.Raggio[1]; //smearing su phi normalizzato al raggio
 	data.smear_phi2 = data.smear_rphi/data.Raggio[2];
 	
-	if(debug){
-		cout<<"nevent "<<data.nevent;
-		cout<<"\nbool_scat = "<<data.bool_scat;
-		cout<<"\ncount_noise = "<<data.count_noise;
-		cout<<"\nmoltTipo = "<<data.moltTipo;
-		cout<<"\nbeam_rms = "<<data.beam_rms*1000;
-		cout<<"\nlayer_rms = "<<data.l1_rms*1000<<"\n";
-	}
+	if(debug) checkSimData(data);
 	
 	fsuccesfulRead = true;
 	return data;
+}
+
+void DataReader::checkSimData(const SimulationData& data){
+	cout<<"nevent "<<data.nevent;
+	cout<<"\nbool_scat = "<<data.bool_scat;
+	cout<<"\ncount_noise = "<<data.count_noise;
+	cout<<"\nmoltTipo = "<<data.moltTipo;
+	cout<<"\nbeam_rms = "<<data.beam_rms*1000;
+	cout<<"\nlayer_rms = "<<data.l1_rms*1000<<"\n";
+	return;
 }
 

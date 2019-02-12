@@ -39,6 +39,7 @@ class DataReader{
 	public:
 		static DataReader* getInstance();
 		SimulationData Read_dat_simulation(const char * filen, bool debug = false);
+		static void checkSimData(const SimulationData& simdata); //cout some stuff
 		bool fileRead() const{ return fsuccesfulRead; }
 		
 };

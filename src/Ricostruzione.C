@@ -30,7 +30,7 @@
 using std::cout;
 
 //const Double_t tolleranza = 2.5; //cm; range intorno alla moda in cui i vertici ricostruiti vengono mediati
-const Double_t tolMin = 0.5;
+const Double_t tolMin = 0.1;
 const Double_t deltaPhiMin = 0.005;//0.05;ris->0.029
 
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
@@ -339,7 +339,7 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 	}
 	
 			
-	TH1I hFindModa = TH1I("findModa", "findModa",160,-20,20);
+	TH1I hFindModa = TH1I("findModa", "findModa",1600,-20,20);
 	for(size_t j = 0; j < zRicostruiti.size(); j++){
 		hFindModa.Fill(zRicostruiti.at(j));
 	}

@@ -28,11 +28,12 @@ void Simulazione(TString filename = nullTString){
 	
 	DataReader* dataRead = DataReader::getInstance();
 	// legge i dati e li assegna alle variabili di una struct SimulationData
-	SimulationData simData = dataRead->Read_dat_simulation("Data/Dati_Simulazione.dat",true);
+	SimulationData simData = dataRead->Read_dat_simulation("Data/Dati_Simulazione.dat");
 	if(!dataRead->fileRead()){
 		cout<<"\nCould not read the .dat file\n";
 		return; //Se non trova il file non c'è niente da fare
 	}
+	DataReader::checkSimData(simData);
 	delete dataRead;
 	
 	Double_t z1_smeared,phi1_smeared,z2_smeared,phi2_smeared; // smearing
