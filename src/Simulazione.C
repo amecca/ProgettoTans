@@ -87,7 +87,7 @@ void Simulazione(TString filename = nullTString){
 		//genera il vertice con la distribuzione assegnata: vertTipo=1 fz->gauss, vertTipo=0 fz->scelta 
 		pt.Generate(simData.rms_xy, simData.rms_z, simData.vertTipo); 
 
-		vtx.x0=pt.GetX(); // coordinate vertice la struct VERTICE serve per scrivere sul tree 
+		vtx.x0=pt.GetX(); // coordinate vertice; la struct VERTICE serve per scrivere sul tree 
 		vtx.y0=pt.GetY(); 
 		vtx.z0=pt.GetZ();
 

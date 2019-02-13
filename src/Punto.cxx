@@ -3,8 +3,11 @@
 #include "TObject.h"
 #include "TRandom3.h"
 #include "TMath.h"
+#include <string>
 
 ClassImp(Punto)
+
+using std::to_string;
 
 Punto::Punto(): TObject(),
   fX(0.),
@@ -39,4 +42,8 @@ Double_t Punto::GetPhi() const{
 	return TMath::ATan2(fY,fX);
 }
 
- Punto::~Punto(){}
+Punto::~Punto(){}
+ 
+std::string Punto::ToString(){
+	return ("x= "+to_string(fX)+" - y= "+to_string(fY)+" - z= "+to_string(fZ));
+}

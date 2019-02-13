@@ -21,6 +21,7 @@ void compile_simulation(bool debug = false){
 	if(gSystem->AccessPathName("Graphs"))
 		gSystem->MakeDirectory("Graphs");//mkdir("Graphs",S_IRWXU);
 	
+	//vector<string> extensions = {"cxx","c","cpp","C"};
 	vector<string> macroNames = {
 		"Punto.cxx",
 		"Hit.cxx",
@@ -29,6 +30,7 @@ void compile_simulation(bool debug = false){
 		"Intersezione.cxx",
 		"Trackelet.cxx",
 		//"Read_dat_simulation.cxx",
+		"Utils.cxx",
 		"DataReader.cxx",
 		"Simulazione.C",
 		"Ricostruzione.C"
@@ -40,6 +42,7 @@ void compile_simulation(bool debug = false){
 
 	for(size_t i = 0; i < macroNames.size(); i++){
 		if(debug) cout<<"+++ Processing \""<<macroNames.at(i)<<"\" \t+++\n";
+		//if(gSystem->AccessPathName("src"+macroNames.at(i)).c_str())
 		gSystem->CompileMacro(("src/"+macroNames.at(i)).c_str(),"kg");
 	}
 }

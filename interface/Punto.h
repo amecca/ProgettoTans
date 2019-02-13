@@ -8,6 +8,7 @@
 #define PUNTO_H
 
 #include <TObject.h>
+#include <string>
 
 class Punto: public TObject
 {
@@ -29,7 +30,7 @@ class Punto: public TObject
 		void SetZ(const Double_t& z) {fZ = z;}
 		
 		Double_t GetPhi() const;
-
+		std::string ToString();
 
 	private:
 
