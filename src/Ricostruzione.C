@@ -24,29 +24,22 @@
 #include "Utils.h"
 #include "DataReader.h"
 
-#define MAX_PHI_ANALYSIS
+//#define MAX_PHI_ANALYSIS
 //#define RANGE_ANALYSIS
 
 using std::cout;
 
 //const Double_t tolleranza = 2.5; //cm; range intorno alla moda in cui i vertici ricostruiti vengono mediati
 const Double_t tolMin = 0.1;
-const Double_t deltaPhiMin = 0.005;//0.05;ris->0.029
+const Double_t deltaPhiMin = 0.01;//0.005;//0.05;ris->0.029
 
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
-Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza, bool debug = false);
+Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza, bool debug = false/*, TFile* aaa = nullptr*/);
 
 void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
-	
-	/*
-	DataReader* dataRead = DataReader::getInstance();
-	SimulationData simData = dataRead->Read_dat_simulation("Data/Dati_Simulazione.dat",true);
-	if(!dataRead->fileRead()){
-		cout<<"\nCould not read the .dat file\n";
-		return; //Se non trova il file non c'è niente da fare
-	}
-	delete dataRead;*/
-	
+	//File di output
+	//TFile* results = new TFile(("Graphs/"+fileName).Data(),"RECREATE");
+	//results->cd();
 	//CANVAS
 	gStyle->SetOptStat(111111);
 	//Risoluzione onnicomprensiva 
@@ -54,28 +47,31 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	TH1I* hRisoluzioneAll = new TH1I("hRisoluzioneAll","Risoluzione inclusva", 200,-0.2,0.2);
 	
 	//Risoluzione al variare di Ztrue
-	Double_t stdDevZ[11];
-	Double_t sStdDevZ[11];
-	std::vector<Double_t> xZ = {-13,-10,-7,-4,-2,0,2,4,7,10,13};
-	Double_t sxZ[11];
+	#define BINS_Z 11
+	Double_t stdDevZ[BINS_Z];
+	Double_t sStdDevZ[BINS_Z];
+	std::vector<Double_t> xZ = {-15,-12,-9,-6,-3,0,3,6,9,12,15};
+	Double_t sxZ[BINS_Z];
 	TCanvas* cRisoluzioneVsZtrue = new TCanvas("cRisoluzioneVsZtrue","cRisoluzioneVsZtrue",10,10,1200,800);
 	TGraphErrors* hRisoluzioneVsZtrue;// = new TGraphErrors(11, xZ, stdDevZ, sxZ, sStdDevZ); //Sarà riempito prima di essere disegnato
-	TH1I* hDeltaZs[11];
+	TH1I* hDeltaZs[BINS_Z];
 	for(size_t i=0; i<xZ.size(); i++){
 		hDeltaZs[i] = new TH1I(Form("deltaZ%lu",i),Form("deltaZ%lu",i), 100,-0.5,0.5);
-		sxZ[i] = 1./sqrt(12);
+		sxZ[i] = 1;//1./sqrt(12);
 	}
 	
 	//Risoluzione al variare della molteplicità
-	Double_t stdDevMol[10];
-	Double_t sStdDevMol[10];
-	std::vector<Double_t> xMol = {5,10,15,20,25,30,35,40,45,50};
-	Double_t sxMol[10];
+	#define RISOL_MOLT_BINS 19
+	Double_t stdDevMol[RISOL_MOLT_BINS]; //19
+	Double_t sStdDevMol[RISOL_MOLT_BINS];
+	std::vector<Double_t> xMol;
+	Double_t sxMol[RISOL_MOLT_BINS];
 	for(size_t k=0; k<xMol.size(); k++) sxMol[k] = sqrt(xMol[k]); //Errore statistico
 	TCanvas* cRisoluzioneVsMolt = new TCanvas("cRisoluzioneVsMolt","cRisoluzioneVsMolt",10,10,1200,800);
 	TGraphErrors* hRisoluzioneVsMolt; //= new TGraphErrors(10, xMol, stdDevMol, sStdDevMol);
-	TH1I* hRisols[11];
-	for(size_t i=0; i<xMol.size(); i++){
+	TH1I* hRisols[RISOL_MOLT_BINS];
+	for(size_t i=0; i < RISOL_MOLT_BINS; i++){
+		xMol.push_back(3 + i*5);
 		hRisols[i] = new TH1I(Form("Risol%lu",i),Form("RisolZ%lu",i), 100,-0.5,0.5);
 		sxMol[i] = 1./sqrt(12);
 	}
@@ -83,20 +79,20 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	//Efficienza al variare della molteplicità
 	TCanvas* cEfficienzaVsMolt = new TCanvas("cEfficienzaVsMolt","cEfficienzaVsMolt",10,10,1200,800);
 	TGraphAsymmErrors* hEfficienzaVsMolt;
-	TH1I* hTotaliVsMolt = new TH1I("hTotaliVsMolt", "Totali;Molteplicita';# eventi", 10,0,50);
-	TH1I* hRicostruitiVsMolt = new TH1I("hRicostruitiVsMolt", "Ricostruiti;Molteplicita';# eventi", 10,0,50);
+	TH1I* hTotaliVsMolt = new TH1I("hTotaliVsMolt", "Totali;Molteplicita';# eventi", 20,0,100);
+	TH1I* hRicostruitiVsMolt = new TH1I("hRicostruitiVsMolt", "Ricostruiti;Molteplicita';# eventi", 20,0,100);
 	
 	//Efficienza "vera" (z vicino al vertice vero) al variare della molteplicità
 	TCanvas* cTrueEffVsMolt = new TCanvas("cTrueEffVsMolt", "cTrueEffVsMolt", 10,10,1200,800);
 	TGraphAsymmErrors* hTrueEffVsMolt;
-	TH1I* hTrueTotVsMolt = new TH1I("hTrueTotVsMolt", "hTrueTotVsMolt", 10,0,50); //conta solo eventi che hanno hit su L2 non di rumore
-	TH1I* hTrueRecVsMolt = new TH1I("hTrueRecVsMolt", "hTrueRecVsMolt", 10,0,50);
+	TH1I* hTrueTotVsMolt = new TH1I("hTrueTotVsMolt", "hTrueTotVsMolt", 20,0,100); //conta solo eventi che hanno hit su L2 non di rumore
+	TH1I* hTrueRecVsMolt = new TH1I("hTrueRecVsMolt", "hTrueRecVsMolt", 20,0,100);
 	
 	//Efficienza/Molteplicità per eventi ricostruiti entro 1 sigma (rms z)
 	TCanvas* cEfficienzaVsMolt1sigma = new TCanvas("cEfficienzaVsMolt1sigma","Efficienza (entro 1 sigma)",10,10,1200,800);
 	TGraphAsymmErrors* hEfficienzaVsMolt1sigma;
-	TH1I* hTotaliVsMolt1sigma = new TH1I("hTotaliVsMolt1sigma", "Totali (1sigma);Molteplicita';# eventi", 10,0,50);
-	TH1I* hRicostruitiVsMolt1sigma = new TH1I("hRicostruitiVsMolt1sigma", "Ricostruiti (1sigma);Molteplicita';# eventi", 10,0,50);
+	TH1I* hTotaliVsMolt1sigma = new TH1I("hTotaliVsMolt1sigma", "Totali (1sigma);Molteplicita';# eventi", 20,0,100);
+	TH1I* hRicostruitiVsMolt1sigma = new TH1I("hRicostruitiVsMolt1sigma", "Ricostruiti (1sigma);Molteplicita';# eventi", 20,0,100);
 	
 	//Efficienza al variare della Ztrue
 	TCanvas* cEfficienzaVsZ = new TCanvas("cEfficienzaVsZ","cEfficienzaVsZ",10,10,1200,800);
@@ -150,6 +146,8 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	tree->GetBranch("L2_hit")->SetAddress(&L2Hits);
 	tree->SetBranchStatus("*",1); //Activates reading of all branches
 	
+	//TFile* temp = new TFile("temp.root", "RECREATE");
+	
 	TStopwatch stopwatch;
 	//Main loop over entries
 	size_t nEntries = tree->GetEntries();
@@ -167,7 +165,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 		if(fabs(vtx.z0) < 5.3 /*rms_z*/) hTotaliVsMolt1sigma->Fill(vtx.m);
 		hTotaliVsZ->Fill(vtx.z0);
 		
-		Double_t zRicostruito = findZ(L1Hits, L2Hits, deltaPhiMin, tolMin);
+		Double_t zRicostruito = findZ(L1Hits, L2Hits, deltaPhiMin, tolMin, false);
 		if(zRicostruito <-999.){
 			nonRicostruiti++;
 			//cout<<"\n-1000"<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
@@ -219,6 +217,8 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	
 	cRisoluzioneAll->cd();
 	hRisoluzioneAll->Draw();
+	//results->cd();
+	//hRisoluzioneAll->Write();
 	
 	//Recupero i dati per i grafici
 	for(size_t i = 0; i < xZ.size(); i++){
@@ -230,6 +230,8 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	hRisoluzioneVsZtrue->SetTitle("Risoluzione vs Z_{true};Z_{true} [cm];Risoluzione [cm]");
 	hRisoluzioneVsZtrue->SetMinimum(0.);
 	hRisoluzioneVsZtrue->Draw();
+	//results->cd();
+	//hRisoluzioneVsZtrue->Write();
 	
 	for(size_t i = 0; i < xMol.size(); i++){
 		stdDevMol[i] = hRisols[i]->GetStdDev();
@@ -240,30 +242,40 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	hRisoluzioneVsZtrue->SetTitle("Risoluzione vs Molteplicita';Molteplicita';Risoluzione [cm]");
 	hRisoluzioneVsZtrue->SetMinimum(0.);
 	hRisoluzioneVsZtrue->Draw();
+	//results->cd();
+	//hRisoluzioneVsZtrue->Write();
 	
 	cEfficienzaVsMolt->cd();
 	hEfficienzaVsMolt = new TGraphAsymmErrors(hRicostruitiVsMolt, hTotaliVsMolt);
 	hEfficienzaVsMolt->SetTitle("Efficienza;Molteplicita';Ricostruiti/Totali");
 	hEfficienzaVsMolt->SetMinimum(0.);
 	hEfficienzaVsMolt->Draw();
+	//results->cd();
+	//hEfficienzaVsMolt->Write();
 	
 	cTrueEffVsMolt->cd();
 	hTrueEffVsMolt = new TGraphAsymmErrors(hTrueRecVsMolt, hTrueTotVsMolt/*hTotaliVsMolt*/);
 	hTrueEffVsMolt->SetTitle("Efficienza algoritmo (#DeltaZ < 0.1 cm);Molteplicita';Efficienza");
 	hTrueEffVsMolt->SetMinimum(0.);
 	hTrueEffVsMolt->Draw();
+	//results->cd();
+	//hTrueEffVsMolt->Write();
 	
 	cEfficienzaVsMolt1sigma->cd();
 	hEfficienzaVsMolt1sigma = new TGraphAsymmErrors(hRicostruitiVsMolt1sigma, hTotaliVsMolt1sigma);
 	hEfficienzaVsMolt1sigma->SetTitle("Efficienza (vertice entro 1#sigma);Molteplicita';Ricostruiti/Totali");
 	hEfficienzaVsMolt1sigma->SetMinimum(0.);
 	hEfficienzaVsMolt1sigma->Draw();
+	//results->cd();
+	//hEfficienzaVsMolt1sigma->Write();
 	
 	cEfficienzaVsZ->cd();
 	hEfficienzaVsZ = new TGraphAsymmErrors(hRicostruitiVsZ, hTotaliVsZ);
 	hEfficienzaVsZ->SetTitle("Efficienza vs Z_{true};Z_{true} [cm]';Ricostruiti/Totali");
 	hEfficienzaVsZ->SetMinimum(0.);
 	hEfficienzaVsZ->Draw();
+	//results->cd();
+	//hEfficienzaVsZ->Write();
 	
 	#ifdef MAX_PHI_ANALYSIS
 	//Risoluzione al variare di phiMax
@@ -276,16 +288,22 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	hRisoluzioneVsMaxPhi->SetMinimum(0.);
 	hRisoluzioneVsMaxPhi->SetTitle("Risoluzione Vs #phi max; #phi max [rad]");
 	hRisoluzioneVsMaxPhi->Draw("AP");
+	//results->cd();
+	//hRisoluzioneVsMaxPhi->Write();
 	
 	cEfficienzaVsPhi->cd();
 	hEfficienzaVsPhi = new TGraphAsymmErrors(hEffPhi, hTotPhi);
 	hEfficienzaVsPhi->SetMinimum(0.);
 	hEfficienzaVsPhi->SetTitle("Efficienza Vs #phi max; #phi max [rad]");
 	hEfficienzaVsPhi->Draw();
+	//results->cd();
+	//hEfficienzaVsPhi->Write();
 	#endif
 	
-	//delete pSimData;
+	//temp->Close();
+	//results->Close();
 	sourceFile->Close();
+	
 	//cout<<"\nNon Ricostruiti: "<<nonRicostruiti<<"\n";
 	return;
 }
@@ -296,6 +314,8 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 
 //Implementazione
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza){
+	if(zRicostruiti.size() == 1)
+		return zRicostruiti.at(0);
 	Double_t temp = 0.;
 	UInt_t zMediati = 0;
 	for(size_t k = 0; k < zRicostruiti.size(); k++){
@@ -315,7 +335,27 @@ Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t
 	}
 }
 
-Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& maxPhi, const Double_t& tolleranza, bool debug){
+Double_t findMaximum(TH1I& dati, const Double_t& tol){
+	//Trova il massimo più a sx
+	Int_t binMaximum = dati.GetMaximumBin();
+	Double_t zModa = dati.GetXaxis()->GetBinCenter(binMaximum);
+	
+	//Controllo che non ci siano altri massimi a dx
+	dati.GetXaxis()->SetRange(binMaximum+1,1200);
+	Int_t binMaximum2 = dati.GetMaximumBin();
+	Double_t zModa2 = dati.GetXaxis()->GetBinCenter(binMaximum2);
+	
+	if(dati.GetBinContent(binMaximum2) == dati.GetBinContent(binMaximum)){
+		//Accidenti, abbiamo due massimi
+		if(fabs(zModa - zModa2) < tol) //Avrei comunque fatto la media
+			return ((zModa + zModa2)/2.);
+		else
+			return (fabs(zModa) < fabs(zModa2) ? zModa : zModa2 ); //Prendo il più vicino a 0
+	}
+	else return zModa;
+}
+
+Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& maxPhi, const Double_t& tolleranza, bool debug/*, TFile* aaa*/){
 	
 	TObject* thisObj1;
 	TObject* thisObj2;
@@ -338,12 +378,18 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 		}
 	}
 	
-			
-	TH1I hFindModa = TH1I("findModa", "findModa",1600,-20,20);
+	
+	TH1I hFindModa = TH1I("findModa", "findModa",1200,-20,20);
 	for(size_t j = 0; j < zRicostruiti.size(); j++){
 		hFindModa.Fill(zRicostruiti.at(j));
 	}
-		
+	/*
+	static int counter = 0;
+	if(counter <100){
+		aaa->cd();
+		hFindModa.Write();
+		counter++;
+	}*/
 	if(zRicostruiti.size() == 0){
 		if(debug){
 			//cout<<"  vtx.m = "<<vtx.m<<"  vtx.z0 = "<<vtx.z0<<"  L1Hits: "<<L1Hits->GetEntries()<<"  L2Hits: "<<L2Hits->GetEntries();
@@ -362,9 +408,10 @@ Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Dou
 		}
 		return -1050.;
 	}
-
-	Int_t binMaximum = hFindModa.GetMaximumBin();
-	Double_t zModa = hFindModa.GetXaxis()->GetBinCenter(binMaximum);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	
+	Double_t zModa = findMaximum(hFindModa, tolleranza);
 	Double_t zRicostruitoMean = mediaIntornoA(zRicostruiti, zModa, tolleranza);
 	/*
 	if(zRicostruitoMean <-999.){

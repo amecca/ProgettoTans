@@ -11,8 +11,13 @@ spessore beam pipe: 0.08
 spessore layer 1: 0.02
 lunghezza radiazione beam pipe: 35.28
 lunghezza radiazione silicio: 9.36
-smearing on z: 0.012
-smearing on rphi: 0.003
-scattering on/off: 1
-contatore rumore: 20
+smearing on z: 0.0012
+smearing on rphi: 0.0003
+scattering on/off: 0
+tipo di rumore: 0
+contatore rumore: 7
 tipo di molteplicita: 0
+tipo di distribuzione z: 0
+
+0.012
+0.003

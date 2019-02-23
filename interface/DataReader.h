@@ -19,10 +19,10 @@ struct SimulationData{
 	Float_t smear_z;
 	Float_t smear_rphi;
 	Int_t bool_scat;
-	Int_t noise_type;
+	Int_t noise_type; //0->count_noise
 	UInt_t count_noise;
-	Int_t moltTipo;
-	Int_t vertTipo; // vertTipo=1 fz->gauss, vertTipo=0 fz->scelta 
+	Int_t moltTipo; // 0->dishmul  1->Uniforme  2->step fissi
+	Int_t vertTipo; // 0->gauss  1->scelta 
 	
 	Double_t beam_rms;
 	Double_t l1_rms;

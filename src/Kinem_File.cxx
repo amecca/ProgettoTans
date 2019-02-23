@@ -32,10 +32,14 @@ Double_t Kinem_File::GenPhi() const{
 
 UInt_t Kinem_File::Molteplicita(Int_t type) const{
 	//cout<<type<<'\n';
-	if(type==0) 
-		return (UInt_t) dishmul->GetRandom();
+	if(type==0){
+		UInt_t a = (UInt_t)(dishmul->GetRandom());
+		while(a == 0)
+			a = (UInt_t)(dishmul->GetRandom());
+		return a;
+	}
 	else if(type==1)
-		return (UInt_t) (gRandom->Rndm()*50);
+		return (UInt_t) (1 + gRandom->Rndm()*99);
 	else if(type == 2){
 		UInt_t possibili[10] = {5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
 		return possibili[(UInt_t)(gRandom->Rndm() *10)];

@@ -86,8 +86,12 @@ void DataReader::checkSimData(const SimulationData& data){
 	cout<<"\nbool_scat = "<<data.bool_scat;
 	cout<<"\ncount_noise = "<<data.count_noise;
 	cout<<"\nmoltTipo = "<<data.moltTipo;
-	cout<<"\nbeam_rms = "<<data.beam_rms*1000;
-	cout<<"\nlayer_rms = "<<data.l1_rms*1000<<"\n";
+	cout<<"\nsmear_z = "<<data.smear_z*100000<<" um";
+	cout<<"\nsmear_rphi = "<<data.smear_rphi*100000<<" um";
+		cout<<" \tsmear_phi1 = "<<data.smear_phi1*1000<<" mrad";
+		cout<<" \tsmear_phi2 = "<<data.smear_phi2*1000<<" mrad";
+	cout<<"\nbeam_rms = "<<data.beam_rms*1000<<" mrad";
+	cout<<"\nlayer_rms = "<<data.l1_rms*1000<<" mrad\n";
 	return;
 }
 

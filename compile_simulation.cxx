@@ -21,6 +21,7 @@ void compile_simulation(bool debug = false){
 	if(gSystem->AccessPathName("Graphs"))
 		gSystem->MakeDirectory("Graphs");//mkdir("Graphs",S_IRWXU);
 	
+	gSystem->CleanCompiledMacros();
 	//vector<string> extensions = {"cxx","c","cpp","C"};
 	vector<string> macroNames = {
 		"Punto.cxx",
@@ -29,7 +30,6 @@ void compile_simulation(bool debug = false){
 		"Direzione.cxx",
 		"Intersezione.cxx",
 		"Trackelet.cxx",
-		//"Read_dat_simulation.cxx",
 		"Utils.cxx",
 		"DataReader.cxx",
 		"Simulazione.C",
