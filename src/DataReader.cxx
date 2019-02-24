@@ -86,6 +86,26 @@ void DataReader::checkSimData(const SimulationData& data){
 	cout<<"\nbool_scat = "<<data.bool_scat;
 	cout<<"\ncount_noise = "<<data.count_noise;
 	cout<<"\nmoltTipo = "<<data.moltTipo;
+	switch(data.moltTipo){
+		case 0:
+			cout<<" \t(da \"kinem.root\")";
+			break;
+		case 1:
+			cout<<" \t(uniforme)";
+			break;
+		case 2:
+			cout<<" \t(punti fissi)";
+			break;
+	}
+	cout<<"\nvertTipo = "<<data.vertTipo;
+	switch(data.vertTipo){
+		case 0:
+			cout<<" \t(gaussiana)";
+			break;
+		case 1:
+			cout<<" \t(punti fissi)";
+			break;
+	}
 	cout<<"\nsmear_z = "<<data.smear_z*100000<<" um";
 	cout<<"\nsmear_rphi = "<<data.smear_rphi*100000<<" um";
 		cout<<" \tsmear_phi1 = "<<data.smear_phi1*1000<<" mrad";

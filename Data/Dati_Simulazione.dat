@@ -13,10 +13,10 @@ lunghezza radiazione beam pipe: 35.28
 lunghezza radiazione silicio: 9.36
 smearing on z: 0.0012
 smearing on rphi: 0.0003
-scattering on/off: 0
+scattering on/off: 1
 tipo di rumore: 0
 contatore rumore: 7
-tipo di molteplicita: 0
+tipo di molteplicita: 1
 tipo di distribuzione z: 0
 
 0.012

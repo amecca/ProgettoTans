@@ -36,7 +36,7 @@ const Double_t deltaPhiMin = 0.01;//0.005;//0.05;ris->0.029
 Double_t mediaIntornoA(const std::vector<Double_t>& zRicostruiti, const Double_t& zModa, const Double_t& tolleranza);
 Double_t findZ(const TClonesArray* L1Hits, const TClonesArray* L2Hits, const Double_t& deltaPhi, const Double_t& tolleranza, bool debug = false/*, TFile* aaa = nullptr*/);
 
-void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
+void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0, bool showSimData = true){
 	//File di output
 	//TFile* results = new TFile(("Graphs/"+fileName).Data(),"RECREATE");
 	//results->cd();
@@ -47,17 +47,17 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	TH1I* hRisoluzioneAll = new TH1I("hRisoluzioneAll","Risoluzione inclusva", 200,-0.2,0.2);
 	
 	//Risoluzione al variare di Ztrue
-	#define BINS_Z 11
-	Double_t stdDevZ[BINS_Z];
-	Double_t sStdDevZ[BINS_Z];
+	#define RISOL_Z_BINS 11
+	Double_t stdDevZ[RISOL_Z_BINS];
+	Double_t sStdDevZ[RISOL_Z_BINS];
 	std::vector<Double_t> xZ = {-15,-12,-9,-6,-3,0,3,6,9,12,15};
-	Double_t sxZ[BINS_Z];
+	Double_t sxZ[RISOL_Z_BINS];
 	TCanvas* cRisoluzioneVsZtrue = new TCanvas("cRisoluzioneVsZtrue","cRisoluzioneVsZtrue",10,10,1200,800);
 	TGraphErrors* hRisoluzioneVsZtrue;// = new TGraphErrors(11, xZ, stdDevZ, sxZ, sStdDevZ); //Sarà riempito prima di essere disegnato
-	TH1I* hDeltaZs[BINS_Z];
+	TH1I* hDeltaZs[RISOL_Z_BINS];
 	for(size_t i=0; i<xZ.size(); i++){
 		hDeltaZs[i] = new TH1I(Form("deltaZ%lu",i),Form("deltaZ%lu",i), 100,-0.5,0.5);
-		sxZ[i] = 1;//1./sqrt(12);
+		sxZ[i] = 1.5;//1.5/sqrt(12);
 	}
 	
 	//Risoluzione al variare della molteplicità
@@ -73,7 +73,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	for(size_t i=0; i < RISOL_MOLT_BINS; i++){
 		xMol.push_back(3 + i*5);
 		hRisols[i] = new TH1I(Form("Risol%lu",i),Form("RisolZ%lu",i), 100,-0.5,0.5);
-		sxMol[i] = 1./sqrt(12);
+		sxMol[i] = 2.;//2./sqrt(12);
 	}
 	
 	//Efficienza al variare della molteplicità
@@ -127,7 +127,8 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	
 	TObject* pSimData = sourceFile->Get("simData");
 	SimulationData simData = *((SimulationData*)pSimData);
-	
+	if(showSimData)
+		DataReader::checkSimData(simData);
 	
 	TString treeName = "VT";
 	TTree* tree = (TTree*)(sourceFile->Get(treeName.Data()));
@@ -174,7 +175,8 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 		else{
 			Double_t deltaZ = zRicostruito - vtx.z0;
 			hRisoluzioneAll->Fill(deltaZ);
-			if(fabs(deltaZ) < 0.1) hTrueRecVsMolt->Fill(vtx.m); //efficienza
+			if(fabs(deltaZ) < 0.01) //100 um
+				hTrueRecVsMolt->Fill(vtx.m); //efficienza algoritmo
 			
 			for(size_t i=0; i<xZ.size(); i++){
 				if(fabs(vtx.z0 - xZ[i]) < 1.5){
@@ -183,7 +185,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 				}
 			}
 			for(size_t i=0; i<xMol.size(); i++){
-				if(fabs(vtx.m - xMol[i]) < 1){
+				if(fabs(vtx.m - xMol[i]) <= 2){
 					hRisols[i]->Fill(deltaZ);
 					break;
 				}
@@ -255,7 +257,7 @@ void Ricostruzione(TString fileName = "simulazione.root", size_t nevents = 0){
 	
 	cTrueEffVsMolt->cd();
 	hTrueEffVsMolt = new TGraphAsymmErrors(hTrueRecVsMolt, hTrueTotVsMolt/*hTotaliVsMolt*/);
-	hTrueEffVsMolt->SetTitle("Efficienza algoritmo (#DeltaZ < 0.1 cm);Molteplicita';Efficienza");
+	hTrueEffVsMolt->SetTitle("Efficienza algoritmo (#DeltaZ < 100 #mum);Molteplicita';Efficienza");
 	hTrueEffVsMolt->SetMinimum(0.);
 	hTrueEffVsMolt->Draw();
 	//results->cd();
